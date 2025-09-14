@@ -1,29 +1,16 @@
-// App.tsx
-// Expo + TypeScript + NativeWind (Tailwind for React Native)
-// Minimal dependencies:
-//   expo install react-native-safe-area-context react-native-svg
-//   npm i nativewind
-//   npm i -D tailwindcss
-// Configure NativeWind per docs (tailwind.config.js with "nativewind/preset")
-// Then run: npx tailwindcss init -p
-// In babel.config.js add: ['nativewind/babel']
-
+import { Link } from 'expo-router';
 import React from 'react';
-// import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView, View, Text, Linking, Pressable } from 'react-native';
-
-// If using NativeWind v4+
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// import "nativewind/types";
-
-// ---------- Utility components ----------
-const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <View className="mt-6">
-    <Text className="text-xl font-semibold tracking-tight text-gray-900">{title}</Text>
-    <View className="mt-2 h-[1px] bg-gray-200" />
-    <View className="mt-3">{children}</View>
-  </View>
-);
+import {
+  ScrollView,
+  View,
+  Text,
+  Linking,
+  Pressable,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  Image,
+} from 'react-native';
+import { useScrollX, useScrollY } from '~/store/store';
 
 const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ left, right }) => (
   <View className="flex-row items-start justify-between gap-3">
@@ -54,11 +41,11 @@ const LinkText: React.FC<{ href: string; children: React.ReactNode }> = ({ href,
 // ---------- Data (edit as needed) ----------
 const resume = {
   name: 'Jonathan Troncoso',
-  location: 'Los Angeles, CA',
-  email: 'you@email.com',
-  phone: '(XXX) XXX-XXXX',
+  location: 'Denver, CO',
+  email: 'jon.troncoso@gmail.com',
+  phone: '(303) 345-1239',
   linkedin: 'https://www.linkedin.com/in/jonathan-troncoso-0b687360/',
-  github: 'https://github.com/your-handle',
+  github: 'https://github.com/jontroncoso/',
   summary:
     'Senior Software Engineer & Technical Leader with 10+ years building and scaling fintech, SaaS, and consumer platforms. Expert in AWS, Kubernetes, microservices (gRPC/GraphQL/REST), and modern web/mobile. Blends hands-on delivery with team leadership to ship reliable, secure, and high-impact products.',
   skills: {
@@ -178,90 +165,145 @@ const resume = {
 
 // ---------- Screen ----------
 export default function Home() {
+  const scrollY = useScrollY((state) => state.scrollY);
+  const setScrollY = useScrollY((state) => state.setScrollY);
+  const scrollX = useScrollX((state) => state.scrollX);
+  const setScrollX = useScrollX((state) => state.setScrollX);
+
+  function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    console.log(e.nativeEvent.contentOffset.y);
+    setScrollY(e.nativeEvent.contentOffset.y);
+  }
   return (
     // <SafeAreaProvider>
     //   <SafeAreaView className="bg-white">
-    <ScrollView className="px-5 py-6" contentContainerStyle={{ paddingBottom: 48 }}>
+    <ScrollView
+      className="px-5 py-6"
+      contentContainerStyle={{ paddingBottom: 48 }}
+      onScroll={onScroll}
+      horizontal={false}
+      scrollEventThrottle={16}>
+      {/* Decorative Background */}
+      <View
+        className="text-bold fixed left-0 top-0 origin-left text-left opacity-20"
+        style={{
+          transform: [{ translateX: 200 }, { rotate: '45deg' }, { translateX: -3 * scrollY + 100 }],
+        }}>
+        <Text
+          style={{
+            fontSize: 300,
+            color: `rgb(${scrollX / 5}, ${scrollX / 10}, ${255 - scrollX})`,
+          }}>
+          TRONCOSO
+        </Text>
+      </View>
       {/* Header */}
-      <View className="items-start">
-        <Text className="text-3xl font-extrabold tracking-tight text-gray-900">{resume.name}</Text>
-        <Text className="mt-1 text-base text-gray-700">{resume.location}</Text>
-        <View className="mt-2 flex-row flex-wrap gap-x-3 gap-y-1">
-          <Text className="text-base text-gray-800">{resume.email}</Text>
-          <Text className="text-base text-gray-400">•</Text>
-          <Text className="text-base text-gray-800">{resume.phone}</Text>
-          <Text className="text-base text-gray-400">•</Text>
-          <LinkText href={resume.linkedin}>LinkedIn</LinkText>
-          <Text className="text-base text-gray-400">•</Text>
-          <LinkText href={resume.github}>GitHub</LinkText>
+      <View className="flex flex-row items-center justify-start gap-6">
+        <View className="aspect-square h-full">
+          <Image
+            source={require('../assets/me.jpeg')}
+            className="rounded-full"
+            style={{ width: '100%', height: '100%' }}
+          />
+        </View>
+        <View className="asdsad flex-1 flex-wrap items-start justify-start">
+          <Text className="text-3xl font-extrabold tracking-tight text-gray-900">
+            {resume.name}
+          </Text>
+          <Text className="mt-1 text-base text-gray-700">{resume.location}</Text>
+          <View className="mt-2 flex-row flex-wrap gap-x-3 gap-y-1">
+            <Text className="text-base text-gray-800">{resume.email}</Text>
+            <Text className="text-base text-gray-400">•</Text>
+            <Text className="text-base text-gray-800">{resume.phone}</Text>
+            <Text className="text-base text-gray-400">•</Text>
+            <LinkText href={resume.linkedin}>LinkedIn</LinkText>
+            <Text className="text-base text-gray-400">•</Text>
+            <LinkText href={resume.github}>GitHub</LinkText>
+          </View>
+          <Text className="flex-wrap text-wrap text-base leading-6 text-gray-800">
+            {resume.summary}
+          </Text>
         </View>
       </View>
 
-      {/* Summary */}
-      <Section title="Summary">
-        <Text className="text-base leading-6 text-gray-800">{resume.summary}</Text>
-      </Section>
-
       {/* Skills */}
-      <Section title="Core Skills">
-        <View className="mt-1">
-          <Text className="text-sm font-semibold text-gray-900">Languages & Frameworks</Text>
-          <View className="mt-2 flex-row flex-wrap">
-            {resume.skills.languages.map((s) => (
-              <Tag key={s} label={s} />
-            ))}
-          </View>
-        </View>
+      <View className="mt-6">
+        <Text className="text-xl font-semibold tracking-tight text-gray-900">Core Skills</Text>
         <View className="mt-3">
-          <Text className="text-sm font-semibold text-gray-900">Cloud & Infrastructure</Text>
-          <View className="mt-2 flex-row flex-wrap">
-            {resume.skills.cloud.map((s) => (
-              <Tag key={s} label={s} />
-            ))}
-          </View>
-        </View>
-        <View className="mt-3">
-          <Text className="text-sm font-semibold text-gray-900">Strengths</Text>
-          <View className="mt-2 flex-row flex-wrap">
-            {resume.skills.strengths.map((s) => (
-              <Tag key={s} label={s} />
-            ))}
-          </View>
-        </View>
-      </Section>
-
-      {/* Experience */}
-      <Section title="Professional Experience">
-        {resume.experience.map((role) => (
-          <View key={`${role.company}-${role.title}`} className="mb-4">
-            <Row
-              left={
-                <View>
-                  <Text className="text-base font-semibold text-gray-900">{role.title}</Text>
-                  <Text className="text-base text-gray-700">{role.company}</Text>
-                </View>
-              }
-              right={
-                <Text className="text-sm text-gray-600">
-                  {role.start} – {role.end}
-                </Text>
-              }
-            />
-            <View className="mt-2">
-              {role.bullets.map((b, i) => (
-                <Bullet key={i}>{b}</Bullet>
+          <View className="mt-1">
+            <Text className="text-sm font-semibold text-gray-900">Languages & Frameworks</Text>
+            <View className="mt-2 flex-row flex-wrap">
+              {resume.skills.languages.map((s) => (
+                <Tag key={s} label={s} />
               ))}
             </View>
           </View>
-        ))}
-      </Section>
+          <View className="mt-3">
+            <Text className="text-sm font-semibold text-gray-900">Cloud & Infrastructure</Text>
+            <View className="mt-2 flex-row flex-wrap">
+              {resume.skills.cloud.map((s) => (
+                <Tag key={s} label={s} />
+              ))}
+            </View>
+          </View>
+          <View className="mt-3">
+            <Text className="text-sm font-semibold text-gray-900">Strengths</Text>
+            <View className="mt-2 flex-row flex-wrap">
+              {resume.skills.strengths.map((s) => (
+                <Tag key={s} label={s} />
+              ))}
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Experience */}
+      <View className={`mt-6`}>
+        <Text className="text-xl font-semibold tracking-tight text-gray-900">
+          Professional Experience
+        </Text>
+        {/* <View className={`mt-3 flex flex-row gap-10 overflow-x-auto`}> */}
+
+        <ScrollView
+          className="mt-3 flex flex-row gap-10 overflow-x-auto"
+          contentContainerStyle={{ paddingBottom: 48 }}
+          onScroll={(e) => {
+            console.log(e.nativeEvent.contentOffset.x);
+            setScrollX(e.nativeEvent.contentOffset.x);
+          }}
+          horizontal={true}
+          scrollEventThrottle={16}>
+          {resume.experience.map((role) => (
+            <View key={`${role.company}-${role.title}`} className="mb-4 max-w-96">
+              <Row
+                left={
+                  <View>
+                    <Text className="text-base font-semibold text-gray-900">{role.title}</Text>
+                    <Text className="text-base text-gray-700">{role.company}</Text>
+                  </View>
+                }
+                right={
+                  <Text className="text-sm text-gray-600">
+                    {role.start} – {role.end}
+                  </Text>
+                }
+              />
+              <View className="mt-2">
+                {role.bullets.map((b, i) => (
+                  <Bullet key={i}>{b}</Bullet>
+                ))}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+      {/* </View> */}
 
       {/* Footer note */}
       <View className="mt-8 opacity-70">
-        <Text className="text-xs text-gray-500">
-          Built with Expo + NativeWind. Edit App.tsx to customize. You can also export to PDF via a
-          web share or native print module.
-        </Text>
+        <Link href="/details?name=Expo%20Rocks">
+          <Text className="mt-1 text-xs text-blue-600">View Details Screen</Text>
+        </Link>
       </View>
     </ScrollView>
     //   </SafeAreaView>

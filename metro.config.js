@@ -6,5 +6,5 @@ const { withNativeWind } = require('nativewind/metro');
 /** @type {import('expo/metro-config').MetroConfig} */
 
 const config = getDefaultConfig(__dirname);
-
+config.resolver.unstable_conditionNames = ['browser', 'require', 'react-native'];
 module.exports = withNativeWind(config, { input: './global.css' });
