@@ -1,16 +1,9 @@
 import { Link } from 'expo-router';
 import React from 'react';
-import {
-  ScrollView,
-  View,
-  Text,
-  Linking,
-  Pressable,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  Image,
-} from 'react-native';
+import { ScrollView, View, Text, Linking, Pressable, Image } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useScrollX, useScrollY } from '~/store/store';
+import { Moon, Send } from 'lucide-react-native';
 
 const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ left, right }) => (
   <View className="flex-row items-start justify-between gap-3">
@@ -30,12 +23,6 @@ const Tag: React.FC<{ label: string }> = ({ label }) => (
   <View className="mb-2 mr-2 rounded-md bg-gray-100 px-2 py-1">
     <Text className="text-xs text-gray-700">{label}</Text>
   </View>
-);
-
-const LinkText: React.FC<{ href: string; children: React.ReactNode }> = ({ href, children }) => (
-  <Pressable onPress={() => Linking.openURL(href)}>
-    <Text className="text-base text-blue-600">{children}</Text>
-  </Pressable>
 );
 
 // ---------- Data (edit as needed) ----------
@@ -165,148 +152,192 @@ const resume = {
 
 // ---------- Screen ----------
 export default function Home() {
+  // Background Animation on page-scroll
   const scrollY = useScrollY((state) => state.scrollY);
   const setScrollY = useScrollY((state) => state.setScrollY);
+
+  // Background Color Change on Experience Section scroll
   const scrollX = useScrollX((state) => state.scrollX);
   const setScrollX = useScrollX((state) => state.setScrollX);
+  const experienceScrollRef = React.useRef<ScrollView>(null);
 
-  function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
-    console.log(e.nativeEvent.contentOffset.y);
-    setScrollY(e.nativeEvent.contentOffset.y);
-  }
+  // Bounce auto-scroll experience section
+  const bounce = () => {
+    if (experienceScrollRef.current) {
+      experienceScrollRef.current.scrollTo({
+        x: 250,
+        animated: true,
+      });
+      setTimeout(() => {
+        experienceScrollRef.current?.scrollTo({
+          x: 0,
+          animated: true,
+        });
+      }, 150);
+    }
+  };
+
+  React.useEffect(() => {
+    setTimeout(bounce, 3000);
+    setTimeout(bounce, 8000);
+  }, []);
+
   return (
-    // <SafeAreaProvider>
-    //   <SafeAreaView className="bg-white">
-    <ScrollView
-      className="px-5 py-6"
-      contentContainerStyle={{ paddingBottom: 48 }}
-      onScroll={onScroll}
-      horizontal={false}
-      scrollEventThrottle={16}>
-      {/* Decorative Background */}
-      <View
-        className="text-bold fixed left-0 top-0 origin-left text-left opacity-20"
-        style={{
-          transform: [{ translateX: 200 }, { rotate: '45deg' }, { translateX: -3 * scrollY + 100 }],
-        }}>
-        <Text
+    <SafeAreaProvider>
+      <SafeAreaView className="flex-1 bg-white">
+        {/* Decorative Background */}
+        <View
+          className="text-bold fixed left-0 top-0 origin-left text-left opacity-20"
           style={{
-            fontSize: 300,
-            color: `rgb(${scrollX / 5}, ${scrollX / 10}, ${255 - scrollX})`,
+            transform: [{ translateX: 200 }, { rotate: '45deg' }, { translateX: -1.5 * scrollY }],
           }}>
-          TRONCOSO
-        </Text>
-      </View>
-      {/* Header */}
-      <View className="flex flex-row items-center justify-start gap-6">
-        <View className="aspect-square h-full">
-          <Image
-            source={require('../assets/me.jpeg')}
-            className="rounded-full"
-            style={{ width: '100%', height: '100%' }}
-          />
-        </View>
-        <View className="asdsad flex-1 flex-wrap items-start justify-start">
-          <Text className="text-3xl font-extrabold tracking-tight text-gray-900">
-            {resume.name}
-          </Text>
-          <Text className="mt-1 text-base text-gray-700">{resume.location}</Text>
-          <View className="mt-2 flex-row flex-wrap gap-x-3 gap-y-1">
-            <Text className="text-base text-gray-800">{resume.email}</Text>
-            <Text className="text-base text-gray-400">•</Text>
-            <Text className="text-base text-gray-800">{resume.phone}</Text>
-            <Text className="text-base text-gray-400">•</Text>
-            <LinkText href={resume.linkedin}>LinkedIn</LinkText>
-            <Text className="text-base text-gray-400">•</Text>
-            <LinkText href={resume.github}>GitHub</LinkText>
-          </View>
-          <Text className="flex-wrap text-wrap text-base leading-6 text-gray-800">
-            {resume.summary}
+          <Text
+            style={{
+              fontSize: 300,
+              color: `rgb(${scrollX / 5}, ${scrollX / 10}, ${255 - scrollX})`,
+            }}>
+            TRONCOSO
           </Text>
         </View>
-      </View>
 
-      {/* Skills */}
-      <View className="mt-6">
-        <Text className="text-xl font-semibold tracking-tight text-gray-900">Core Skills</Text>
-        <View className="mt-3">
-          <View className="mt-1">
-            <Text className="text-sm font-semibold text-gray-900">Languages & Frameworks</Text>
-            <View className="mt-2 flex-row flex-wrap">
-              {resume.skills.languages.map((s) => (
-                <Tag key={s} label={s} />
-              ))}
-            </View>
-          </View>
-          <View className="mt-3">
-            <Text className="text-sm font-semibold text-gray-900">Cloud & Infrastructure</Text>
-            <View className="mt-2 flex-row flex-wrap">
-              {resume.skills.cloud.map((s) => (
-                <Tag key={s} label={s} />
-              ))}
-            </View>
-          </View>
-          <View className="mt-3">
-            <Text className="text-sm font-semibold text-gray-900">Strengths</Text>
-            <View className="mt-2 flex-row flex-wrap">
-              {resume.skills.strengths.map((s) => (
-                <Tag key={s} label={s} />
-              ))}
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* Experience */}
-      <View className={`mt-6`}>
-        <Text className="text-xl font-semibold tracking-tight text-gray-900">
-          Professional Experience
-        </Text>
-        {/* <View className={`mt-3 flex flex-row gap-10 overflow-x-auto`}> */}
-
-        <ScrollView
-          className="mt-3 flex flex-row gap-10 overflow-x-auto"
-          contentContainerStyle={{ paddingBottom: 48 }}
-          onScroll={(e) => {
-            console.log(e.nativeEvent.contentOffset.x);
-            setScrollX(e.nativeEvent.contentOffset.x);
-          }}
-          horizontal={true}
-          scrollEventThrottle={16}>
-          {resume.experience.map((role) => (
-            <View key={`${role.company}-${role.title}`} className="mb-4 max-w-96">
-              <Row
-                left={
-                  <View>
-                    <Text className="text-base font-semibold text-gray-900">{role.title}</Text>
-                    <Text className="text-base text-gray-700">{role.company}</Text>
-                  </View>
-                }
-                right={
-                  <Text className="text-sm text-gray-600">
-                    {role.start} – {role.end}
-                  </Text>
-                }
+        {/* Fixed Header */}
+        <View className="fixed left-0 right-0 top-0 z-10 flex flex-col items-start justify-start bg-white/0 sm:flex-row">
+          <View className="w-full flex-1 flex-row flex-wrap items-start bg-white/20 p-3 backdrop-blur">
+            <View
+              className="hidden aspect-square sm:block"
+              style={{ height: Math.max(40, 120 - scrollY), marginBottom: '-100%' }}>
+              <Image
+                source={require('../assets/me.jpeg')}
+                className="rounded-full"
+                style={{ width: '100%', height: '100%' }}
               />
-              <View className="mt-2">
-                {role.bullets.map((b, i) => (
-                  <Bullet key={i}>{b}</Bullet>
-                ))}
+            </View>
+            <Text className="grow text-3xl font-extrabold tracking-tight text-gray-900 sm:pl-6">
+              {resume.name}
+            </Text>
+            <Moon className="p-2" size={40} />
+            <Send className="p-2" size={40} />
+          </View>
+        </View>
+
+        {/* Main Content */}
+        <ScrollView
+          className="px-5 py-6"
+          contentContainerStyle={{ paddingBottom: 48 }}
+          onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
+          horizontal={false}
+          scrollEventThrottle={16}>
+          {/* Header */}
+          <View className="aspect-square w-full sm:hidden">
+            <Image
+              source={require('../assets/me.jpeg')}
+              className="rounded-full"
+              style={{ width: '100%', height: '100%' }}
+            />
+          </View>
+
+          <View className="flex flex-col items-center justify-start gap-6 pt-10 sm:flex-row sm:pl-32">
+            <View className="flex-1 flex-wrap items-start justify-start">
+              <Text className="mt-1 text-base text-gray-700">{resume.location}</Text>
+              <View className="mt-2 flex-row flex-wrap gap-x-3 gap-y-1">
+                <Text className="text-base text-gray-800">{resume.email}</Text>
+                <Text className="text-base text-gray-400">•</Text>
+                <Text className="text-base text-gray-800">{resume.phone}</Text>
+                <Text className="text-base text-gray-400">•</Text>
+                <Pressable onPress={() => Linking.openURL(resume.linkedin)}>
+                  <Text className="text-base text-blue-600">LinkedIn</Text>
+                </Pressable>
+                <Text className="text-base text-gray-400">•</Text>
+                <Pressable onPress={() => Linking.openURL(resume.github)}>
+                  <Text className="text-base text-blue-600">GitHub</Text>
+                </Pressable>
+              </View>
+              <Text className="flex-wrap text-wrap text-base leading-6 text-gray-800">
+                {resume.summary}
+              </Text>
+            </View>
+          </View>
+
+          {/* Skills */}
+          <View className="mt-6">
+            <Text className="text-xl font-semibold tracking-tight text-gray-900">Core Skills</Text>
+            <View className="mt-3">
+              <View className="mt-1">
+                <Text className="text-sm font-semibold text-gray-900">Languages & Frameworks</Text>
+                <View className="mt-2 flex-row flex-wrap">
+                  {resume.skills.languages.map((s) => (
+                    <Tag key={s} label={s} />
+                  ))}
+                </View>
+              </View>
+              <View className="mt-3">
+                <Text className="text-sm font-semibold text-gray-900">Cloud & Infrastructure</Text>
+                <View className="mt-2 flex-row flex-wrap">
+                  {resume.skills.cloud.map((s) => (
+                    <Tag key={s} label={s} />
+                  ))}
+                </View>
+              </View>
+              <View className="mt-3">
+                <Text className="text-sm font-semibold text-gray-900">Strengths</Text>
+                <View className="mt-2 flex-row flex-wrap">
+                  {resume.skills.strengths.map((s) => (
+                    <Tag key={s} label={s} />
+                  ))}
+                </View>
               </View>
             </View>
-          ))}
-        </ScrollView>
-      </View>
-      {/* </View> */}
+          </View>
 
-      {/* Footer note */}
-      <View className="mt-8 opacity-70">
-        <Link href="/details?name=Expo%20Rocks">
-          <Text className="mt-1 text-xs text-blue-600">View Details Screen</Text>
-        </Link>
-      </View>
-    </ScrollView>
-    //   </SafeAreaView>
-    // </SafeAreaProvider>
+          {/* Experience */}
+          <View className={`mt-6`}>
+            <Text className="text-xl font-semibold tracking-tight text-gray-900">
+              Professional Experience
+            </Text>
+            <ScrollView
+              className="mt-3 flex flex-row gap-10 overflow-x-auto"
+              contentContainerStyle={{ paddingBottom: 48, gap: 40 }}
+              onScroll={(e) => {
+                setScrollX(e.nativeEvent.contentOffset.x);
+              }}
+              horizontal={true}
+              scrollEventThrottle={16}
+              ref={experienceScrollRef}>
+              {resume.experience.map((role) => (
+                <View
+                  key={`${role.company}-${role.title}`}
+                  className="mb-4 max-w-96 rounded-xl bg-zinc-500/20 p-6">
+                  <Row
+                    left={
+                      <View>
+                        <Text className="text-base font-semibold text-gray-900">{role.title}</Text>
+                        <Text className="text-base text-gray-700">{role.company}</Text>
+                      </View>
+                    }
+                    right={
+                      <Text className="text-sm text-gray-600">
+                        {role.start} – {role.end}
+                      </Text>
+                    }
+                  />
+                  <View className="mt-2">
+                    {role.bullets.map((b, i) => (
+                      <Bullet key={i}>{b}</Bullet>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Footer note */}
+          <View className="mt-8 opacity-70">
+            <Link href="/details?name=Expo%20Rocks">
+              <Text className="mt-1 text-xs text-blue-600">View Details Screen</Text>
+            </Link>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }

@@ -18,6 +18,37 @@ locals {
 variable "hosted_zone_id" {}
 variable "aws_region" { default = "us-east-1" }
 variable "s3_bucket" {}
+variable "domain" { default = "tronco.so" }
+
+# ACM cert for CloudFront (must be in us-east-1)
+resource "aws_acm_certificate" "cf_cert" {
+  domain_name               = "tronco.so"
+  subject_alternative_names = ["jon.tronco.so"]
+  validation_method         = "DNS"
+}
+
+# DNS validation records for the ACM cert
+resource "aws_route53_record" "cf_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.cf_cert.domain_validation_options : dvo.domain_name => {
+      name  = dvo.resource_record_name
+      type  = dvo.resource_record_type
+      value = dvo.resource_record_value
+    }
+  }
+
+  zone_id = aws_route53_zone.main.zone_id
+  name    = each.value.name
+  type    = each.value.type
+  ttl     = 60
+  records = [each.value.value]
+}
+
+# Wait for validation to complete and expose the validated cert ARN
+resource "aws_acm_certificate_validation" "cf_cert_validation" {
+  certificate_arn         = aws_acm_certificate.cf_cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.cf_cert_validation : record.fqdn]
+}
 
 resource "aws_s3_bucket" "react_apps" {
   bucket = var.s3_bucket
@@ -68,6 +99,8 @@ resource "aws_cloudfront_distribution" "react_apps" {
   comment             = "React app ${aws_s3_bucket.react_apps.bucket} distribution"
   default_root_object = "index.html"
 
+  aliases = ["jon.tronco.so"]
+
   origin {
     domain_name = aws_s3_bucket.react_apps.bucket_regional_domain_name
     origin_id   = aws_s3_bucket.react_apps.id
@@ -114,11 +147,31 @@ resource "aws_cloudfront_distribution" "react_apps" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate_validation.cf_cert_validation.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
+
+  depends_on = [aws_acm_certificate_validation.cf_cert_validation]
 }
 
 
 output "cloudfront_urls" {
   value = "https://${aws_cloudfront_distribution.react_apps.domain_name}"
+}
+
+resource "aws_route53_zone" "main" {
+  name = "tronco.so"
+}
+
+resource "aws_route53_record" "www_alias" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "jon.${aws_route53_zone.main.name}" # Or your desired subdomain
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.react_apps.domain_name    # Get the CloudFront domain name
+    zone_id                = aws_cloudfront_distribution.react_apps.hosted_zone_id # Get the CloudFront hosted zone ID
+    evaluate_target_health = true
+  }
 }
