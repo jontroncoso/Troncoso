@@ -3,7 +3,7 @@ import React from 'react';
 import { ScrollView, View, Text, Linking, Pressable, Image } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useScrollX, useScrollY } from '~/store/store';
-import { Moon, Send } from 'lucide-react-native';
+import { ExternalLink, Moon, Send } from 'lucide-react-native';
 
 const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ left, right }) => (
   <View className="flex-row items-start justify-between gap-3">
@@ -28,7 +28,7 @@ const Tag: React.FC<{ label: string }> = ({ label }) => (
 // ---------- Data (edit as needed) ----------
 const resume = {
   name: 'Jonathan Troncoso',
-  location: 'Denver, CO',
+  generalTitle: 'Senior Software Engineer | Cloud Solutions Architect | Technical Leader',
   email: 'jon.troncoso@gmail.com',
   phone: '(303) 345-1239',
   linkedin: 'https://www.linkedin.com/in/jonathan-troncoso-0b687360/',
@@ -50,6 +50,7 @@ const resume = {
       'AWS (EKS, S3, RDS, EC2, Route53, CloudFront)',
       'Kubernetes',
       'AWS CDK',
+      'Terraform',
       'Cloudflare',
       'Docker',
       'CI/CD',
@@ -73,7 +74,7 @@ const resume = {
       end: 'Aug 2024',
       bullets: [
         'Recruited and managed developers; set code quality standards and mentoring practices.',
-        'Architected and managed a secure Kubernetes control plane on AWS (EKS) via CDK with ALB-backed nodes, Cloudflare protection, and subdomains via Route53.',
+        'Architected and managed a secure Kubernetes control plane on AWS (EKS) via CDK with ALB-backed nodes, WAF protection, and subdomains via Route53.',
         'Designed, implemented, and debugged gRPC, GraphQL, and RESTful microservices for core fintech functions.',
         'Deployed React Native apps to the App Store and Google Play with Firebase-based debugging and release workflows.',
         'Built and maintained a Twilio IVR microservice to streamline support and reduce call handling time.',
@@ -87,7 +88,8 @@ const resume = {
       end: 'Aug 2019',
       bullets: [
         'Delivered SaaS platform using Laravel, MySQL, AWS (EC2, RDS, S3).',
-        'Built responsive UI with React.js and Bootstrap; optimized backend queries and performance.',
+        'Built responsive UI with React.js and Bootstrap.',
+        'Optimized backend queries and performance.',
       ],
     },
     {
@@ -99,6 +101,7 @@ const resume = {
       bullets: [
         'Built automated donation gifting service integrated with Stripe webhooks and distributor APIs.',
         'Implemented multi-provider email workflows to improve donor engagement and retention.',
+        'Integrated analytics tools, A/B testing, and Session Recordings to enhance UX and engagement.',
       ],
     },
     {
@@ -119,6 +122,7 @@ const resume = {
       end: 'May 2015',
       bullets: [
         'Engineered SaaS features and optimized backend for high-traffic ecommerce platform.',
+        'Helped facilitate migration to RoR backend while maintaining legacy Laravel platform.',
       ],
     },
     {
@@ -205,24 +209,29 @@ export default function Home() {
           <View className="w-full flex-1 flex-row flex-wrap items-start bg-white/20 p-3 backdrop-blur">
             <View
               className="hidden aspect-square sm:block"
-              style={{ height: Math.max(40, 120 - scrollY), marginBottom: '-100%' }}>
+              style={{ height: Math.max(60, 120 - scrollY), marginBottom: '-100%' }}>
               <Image
                 source={require('../assets/me.jpeg')}
                 className="rounded-full"
                 style={{ width: '100%', height: '100%' }}
               />
             </View>
-            <Text className="grow text-3xl font-extrabold tracking-tight text-gray-900 sm:pl-6">
-              {resume.name}
-            </Text>
-            <Moon className="p-2" size={40} />
-            <Send className="p-2" size={40} />
+            <View className="flex-1 grow flex-col tracking-tight  sm:pl-6">
+              <View className="flex flex-row items-center gap-1">
+                <Text className="grow text-3xl font-extrabold text-gray-900">{resume.name}</Text>
+                <Moon className="p-2" size={40} />
+                <Send className="p-2" size={40} />
+              </View>
+              <Text className="text-md text-wrap font-normal text-gray-900">
+                {resume.generalTitle}
+              </Text>
+            </View>
           </View>
         </View>
 
         {/* Main Content */}
         <ScrollView
-          className="px-5 py-6"
+          className="px-5 pt-8"
           contentContainerStyle={{ paddingBottom: 48 }}
           onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
           horizontal={false}
@@ -238,18 +247,27 @@ export default function Home() {
 
           <View className="flex flex-col items-center justify-start gap-6 pt-10 sm:flex-row sm:pl-32">
             <View className="flex-1 flex-wrap items-start justify-start">
-              <Text className="mt-1 text-base text-gray-700">{resume.location}</Text>
               <View className="mt-2 flex-row flex-wrap gap-x-3 gap-y-1">
-                <Text className="text-base text-gray-800">{resume.email}</Text>
-                <Text className="text-base text-gray-400">•</Text>
-                <Text className="text-base text-gray-800">{resume.phone}</Text>
-                <Text className="text-base text-gray-400">•</Text>
-                <Pressable onPress={() => Linking.openURL(resume.linkedin)}>
-                  <Text className="text-base text-blue-600">LinkedIn</Text>
+                <Pressable onPress={() => Linking.openURL(`mailto:${resume.email}`)}>
+                  <Text className="text-base text-blue-600 underline">{resume.email}</Text>
                 </Pressable>
                 <Text className="text-base text-gray-400">•</Text>
-                <Pressable onPress={() => Linking.openURL(resume.github)}>
-                  <Text className="text-base text-blue-600">GitHub</Text>
+                <Pressable onPress={() => Linking.openURL(`tel:${resume.phone}`)}>
+                  <Text className="text-base text-blue-600 underline">{resume.phone}</Text>
+                </Pressable>
+                <Text className="text-base text-gray-400">•</Text>
+                <Pressable
+                  onPress={() => Linking.openURL(resume.linkedin)}
+                  className="flex-row items-center">
+                  <ExternalLink size={16} className="text-blue-600" />
+                  <Text className="text-base text-blue-600 underline">LinkedIn</Text>
+                </Pressable>
+                <Text className="text-base text-gray-400">•</Text>
+                <Pressable
+                  onPress={() => Linking.openURL(resume.github)}
+                  className="flex-row items-center">
+                  <ExternalLink size={16} className="text-blue-600" />
+                  <Text className="text-base text-blue-600 underline">GitHub</Text>
                 </Pressable>
               </View>
               <Text className="flex-wrap text-wrap text-base leading-6 text-gray-800">
