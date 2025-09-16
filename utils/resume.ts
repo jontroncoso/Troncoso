@@ -1,12 +1,15 @@
 const languages = [
   'TypeScript',
   'Node.js',
-  'React.js',
-  'React Native',
-  'Laravel',
   'GraphQL',
   'gRPC',
   'REST',
+  'postgreSQL',
+  'MySQL',
+  'MongoDB',
+  'Redis',
+  'HTML',
+  'CSS',
 ] as const;
 const frameworks = [
   'Express',
@@ -18,16 +21,34 @@ const frameworks = [
   'TailwindCSS',
   'React',
   'Apollo',
+  'Drupal',
+  'Laravel',
+  'React.js',
+  'React Native',
 ] as const;
 const devops = [
-  'AWS (EKS, S3, RDS, EC2, Route53, CloudFront)',
-  'Kubernetes',
+  'AWS EKS',
+  'AWS S3',
+  'AWS RDS',
+  'AWS EC2',
+  'AWS Route53',
+  'AWS CloudFront',
   'AWS CDK',
+  'AWS DynamoDB',
+  'AWS Lambda',
+  'AWS RedShift',
+  'Step Functions',
+  'AWS ELB',
+  'WAF',
+  'Kubernetes',
   'Terraform',
   'Cloudflare',
   'Docker',
   'CI/CD',
   'Linux',
+  'Github Actions',
+  'CircleCI',
+  'Jenkins',
 ] as const;
 const strengths = [
   'End-to-End Delivery',
@@ -38,10 +59,19 @@ const strengths = [
   'FinTech & SaaS',
 ] as const;
 
-type LanguagesType = (typeof languages)[number];
-type FrameworksType = (typeof frameworks)[number];
-type DevopsType = (typeof devops)[number];
-type StrengthsType = (typeof strengths)[number];
+export const tagType = (t: TagType): 'language' | 'framework' | 'devops' | 'strength' | false => {
+  if (languages.includes(t as LanguagesType)) return 'language';
+  if (frameworks.includes(t as FrameworksType)) return 'framework';
+  if (devops.includes(t as DevopsType)) return 'devops';
+  if (strengths.includes(t as StrengthsType)) return 'strength';
+  return false;
+};
+
+export type LanguagesType = (typeof languages)[number];
+export type FrameworksType = (typeof frameworks)[number];
+export type DevopsType = (typeof devops)[number];
+export type StrengthsType = (typeof strengths)[number];
+export type TagType = LanguagesType | FrameworksType | DevopsType | StrengthsType;
 
 type ExperienceType = {
   title: string;
@@ -100,7 +130,28 @@ export const resumeData: ResumeType = {
       ],
       languages: ['TypeScript', 'Node.js', 'React Native', 'React.js', 'GraphQL', 'gRPC', 'REST'],
       frameworks: ['NestJS', 'Expo', 'Redux', 'Apollo', 'TailwindCSS'],
-      devops: [],
+      devops: [
+        'AWS CDK',
+        'AWS Route53',
+        'AWS Route53',
+        'AWS RDS',
+        'AWS RedShift',
+        'AWS Lambda',
+        'AWS DynamoDB',
+        'AWS EC2',
+        'AWS S3',
+        'AWS ELB',
+        'Kubernetes',
+        'Cloudflare',
+        'Docker',
+        'CI/CD',
+        'Linux',
+        'Step Functions',
+        'Jenkins',
+        'Github Actions',
+        'CircleCI',
+        'AWS EKS',
+      ],
       strengths: [],
     },
     {
@@ -118,8 +169,15 @@ export const resumeData: ResumeType = {
       ],
       languages: ['TypeScript', 'Node.js', 'React Native', 'React.js', 'GraphQL', 'gRPC', 'REST'],
       frameworks: ['NestJS', 'Expo', 'Redux', 'Apollo', 'TailwindCSS'],
-      devops: [],
-      strengths: [],
+      devops: ['AWS ELB', 'AWS EC2', 'AWS RDS', 'AWS S3', 'Linux', 'CI/CD', 'Docker', 'CircleCI'],
+      strengths: [
+        'Debugging',
+        'End-to-End Delivery',
+        'Performance Tuning',
+        'Technical Vision',
+        'Team Leadership',
+        'FinTech & SaaS',
+      ],
     },
     {
       title: 'Web Developer',

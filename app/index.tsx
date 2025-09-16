@@ -13,7 +13,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useDarkMode, useScrollX, useScrollY } from '~/store/store';
 import { ExternalLink, Moon, Phone, Send, Sun, SunMoon } from 'lucide-react-native';
-import { resumeData } from '~/utils/resume';
+import { resumeData, tagType, TagType } from '~/utils/resume';
 
 const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ left, right }) => (
   <View className="flex-row items-start justify-between gap-3">
@@ -31,13 +31,27 @@ const Bullet: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </View>
 );
 
-const Tag: React.FC<{ label: string }> = ({ label }) => (
-  <View className="mb-2 mr-2 rounded-md px-2 py-1" style={{ backgroundColor: 'var(--color-200)' }}>
-    <Text className="text-xs" style={{ color: 'var(--color-700)' }}>
-      {label}
-    </Text>
-  </View>
-);
+const Tag: React.FC<{ label: TagType }> = ({ label }) => {
+  const typeMap = {
+    language: ['var(--color-language)', 'var(--color-language-light)'],
+    framework: ['var(--color-framework)', 'var(--color-framework-light)'],
+    devops: ['var(--color-devops)', 'var(--color-devops-light)'],
+    strength: ['var(--color-strength)', 'var(--color-strength-light)'],
+    false: ['var(--color-300)', 'var(--color-700)'],
+  };
+  const type = tagType(label);
+  if (!type) {
+    console.warn(`Tag "${label}" has no type`);
+    return null;
+  }
+  return (
+    <View className="mb-2 mr-2 rounded-md px-2 py-1" style={{ backgroundColor: typeMap[type][1] }}>
+      <Text className="text-xs" style={{ color: typeMap[type][0] }}>
+        {label}
+      </Text>
+    </View>
+  );
+};
 
 // ---------- Screen ----------
 export default function Home() {
@@ -72,6 +86,9 @@ export default function Home() {
   };
 
   React.useEffect(() => {
+    if (experienceBumpRef.current) {
+      clearInterval(experienceBumpRef.current);
+    }
     experienceBumpRef.current = setInterval(bounce, 6000);
     console.log(
       `\n%cJon Troncoso 🚀`,
@@ -244,10 +261,20 @@ export default function Home() {
             <View className="mt-3">
               <View className="mt-1">
                 <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
-                  Languages & Frameworks
+                  Languages
                 </Text>
                 <View className="mt-2 flex-row flex-wrap">
                   {resumeData.skills.languages.map((s) => (
+                    <Tag key={s} label={s} />
+                  ))}
+                </View>
+              </View>
+              <View className="mt-1">
+                <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
+                  Frameworks
+                </Text>
+                <View className="mt-2 flex-row flex-wrap">
+                  {resumeData.skills.frameworks.map((s) => (
                     <Tag key={s} label={s} />
                   ))}
                 </View>
@@ -284,7 +311,7 @@ export default function Home() {
             </Text>
             <ScrollView
               className="mt-3 flex flex-row gap-10 overflow-x-auto"
-              contentContainerStyle={{ paddingBottom: 48, gap: 40 }}
+              contentContainerStyle={{ paddingBottom: 48, gap: 40, alignItems: 'flex-start' }}
               onScroll={experienceScroll}
               horizontal={true}
               scrollEventThrottle={16}
@@ -301,7 +328,7 @@ export default function Home() {
                           style={{ color: 'var(--color-900)' }}>
                           {role.title}
                         </Text>
-                        <Text className="text-base" style={{ color: 'var(--color-amber)' }}>
+                        <Text className="text-base" style={{ color: 'var(--color-devops)' }}>
                           {role.company}
                         </Text>
                       </View>
@@ -316,6 +343,13 @@ export default function Home() {
                     {role.bullets.map((b, i) => (
                       <Bullet key={i}>{b}</Bullet>
                     ))}
+                  </View>
+                  <View className="mt-3 flex-row flex-wrap">
+                    {[...role.languages, ...role.frameworks, ...role.devops, ...role.strengths].map(
+                      (s) => (
+                        <Tag key={s} label={s} />
+                      )
+                    )}
                   </View>
                 </View>
               ))}

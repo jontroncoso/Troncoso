@@ -14,7 +14,14 @@ export const themes = {
     '--color-800': '#1F2937', //--color-gray-800
     '--color-900': '#111827', //--color-gray-900
     '--color-semitransparent': 'rgba(255, 255, 255, 0.2)',
-    '--color-amber': '#b45309', // amber-700
+    '--color-devops': '#b45309', // amber-700
+    '--color-devops-light': '#ffedd5', // orange-100
+    '--color-language': '#047857', // emerald-700
+    '--color-language-light': '#d1fae5', // emerald-100
+    '--color-framework': '#7c3aed', // violet-700
+    '--color-framework-light': '#ede9fe', // violet-100
+    '--color-strength': '#b91c1c', // red-700
+    '--color-strength-light': '#fee2e2', // red-100
   }),
   dark: vars({
     '--color-link': '#2563eb', // blue-600
@@ -29,6 +36,13 @@ export const themes = {
     '--color-800': '#e5e7eb', //--color-gray-200
     '--color-900': '#f3f4f6', //--color-gray-100
     '--color-semitransparent': 'rgba(0, 0, 0, 0.2)',
-    '--color-amber': '#fbbf24', // amber-300
+    '--color-devops': '#fed7aa', // amber-200
+    '--color-devops-light': '#78350f', // amber-600
+    '--color-language': '#6ee7b7', // emerald-200
+    '--color-language-light': '#065f46', // emerald-600
+    '--color-framework': '#c4b5fd', // violet-200
+    '--color-framework-light': '#6b21a8', // violet-600
+    '--color-strength': '#fecaca', // red-200
+    '--color-strength-light': '#991b1b', // red-600
   }),
 };
