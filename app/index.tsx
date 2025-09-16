@@ -1,9 +1,16 @@
-import { Link } from 'expo-router';
 import React from 'react';
-import { ScrollView, View, Text, Linking, Pressable, Image } from 'react-native';
+import {
+  ScrollView,
+  View,
+  Text,
+  Linking,
+  Pressable,
+  Image,
+  AnimatableNumericValue,
+} from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { useScrollX, useScrollY } from '~/store/store';
-import { ExternalLink, Moon, Send } from 'lucide-react-native';
+import { useDarkMode, useScrollX, useScrollY } from '~/store/store';
+import { ExternalLink, Moon, Phone, Send, Sun, SunMoon } from 'lucide-react-native';
 
 const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ left, right }) => (
   <View className="flex-row items-start justify-between gap-3">
@@ -15,13 +22,17 @@ const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ lef
 const Bullet: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <View className="mb-1.5 flex-row gap-2">
     <Text className="text-base leading-6">•</Text>
-    <Text className="flex-1 text-base leading-6 text-gray-800">{children}</Text>
+    <Text className="flex-1 text-base leading-6" style={{ color: 'var(--color-800)' }}>
+      {children}
+    </Text>
   </View>
 );
 
 const Tag: React.FC<{ label: string }> = ({ label }) => (
-  <View className="mb-2 mr-2 rounded-md bg-gray-100 px-2 py-1">
-    <Text className="text-xs text-gray-700">{label}</Text>
+  <View className="mb-2 mr-2 rounded-md px-2 py-1" style={{ backgroundColor: 'var(--color-200)' }}>
+    <Text className="text-xs" style={{ color: 'var(--color-700)' }}>
+      {label}
+    </Text>
   </View>
 );
 
@@ -165,6 +176,10 @@ export default function Home() {
   const setScrollX = useScrollX((state) => state.setScrollX);
   const experienceScrollRef = React.useRef<ScrollView>(null);
 
+  // Dark Mode
+  const darkMode = useDarkMode((state) => state.darkMode);
+  const toggleDarkMode = useDarkMode((state) => state.toggleDarkMode);
+
   // Bounce auto-scroll experience section
   const bounce = () => {
     if (experienceScrollRef.current) {
@@ -184,16 +199,24 @@ export default function Home() {
   React.useEffect(() => {
     setTimeout(bounce, 3000);
     setTimeout(bounce, 8000);
+    console.log(
+      `\n%cJon Troncoso 🚀`,
+      'color:#0dd8d8; background:#0b1021; font-size:1.5rem; padding:0.15rem 0.25rem; margin: 1rem auto; font-family: Rockwell; border: 2px solid #0dd8d8; border-radius: 4px;font-weight: bold; text-shadow: 1px 1px 1px #00af87bf;'
+    );
   }, []);
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView className="flex-1 bg-white">
+      <SafeAreaView className="flex-1" style={{ backgroundColor: 'var(--color-50)' }}>
         {/* Decorative Background */}
         <View
-          className="text-bold fixed left-0 top-0 origin-left text-left opacity-20"
+          className="text-bold fixed left-3/4 top-0 origin-left text-left opacity-10"
           style={{
-            transform: [{ translateX: 200 }, { rotate: '45deg' }, { translateX: -1.5 * scrollY }],
+            transform: [
+              { translateX: 0 },
+              { rotate: '90deg' },
+              { translateX: `-${80 * scrollY}%` as AnimatableNumericValue },
+            ],
           }}>
           <Text
             style={{
@@ -206,7 +229,9 @@ export default function Home() {
 
         {/* Fixed Header */}
         <View className="fixed left-0 right-0 top-0 z-10 flex flex-col items-start justify-start bg-white/0 sm:flex-row">
-          <View className="w-full flex-1 flex-row flex-wrap items-start bg-white/20 p-3 backdrop-blur">
+          <View
+            className="w-full flex-1 flex-row flex-wrap items-start p-3 backdrop-blur"
+            style={{ backgroundColor: 'var(--color-semitransparent)' }}>
             <View
               className="hidden aspect-square sm:block"
               style={{ height: Math.max(60, 120 - scrollY), marginBottom: '-100%' }}>
@@ -216,13 +241,35 @@ export default function Home() {
                 style={{ width: '100%', height: '100%' }}
               />
             </View>
-            <View className="flex-1 grow flex-col tracking-tight  sm:pl-6">
-              <View className="flex flex-row items-center gap-1">
-                <Text className="grow text-3xl font-extrabold text-gray-900">{resume.name}</Text>
-                <Moon className="p-2" size={40} />
-                <Send className="p-2" size={40} />
+            <View className="flex-1 grow flex-col tracking-tight sm:pl-6">
+              <View className="flex flex-row items-center gap-2">
+                <Text
+                  className="grow text-3xl font-extrabold"
+                  style={{ color: 'var(--color-900)' }}>
+                  {resume.name}
+                </Text>
+                <Pressable
+                  onPress={toggleDarkMode}
+                  className="rounded-full"
+                  style={{ backgroundColor: 'var(--color-200)' }}>
+                  {darkMode === 'light' && (
+                    <Sun className="p-2" color="var(--color-900)" size={40} />
+                  )}
+                  {darkMode === 'dark' && (
+                    <Moon className="p-2" color="var(--color-900)" size={40} />
+                  )}
+                  {darkMode === false && (
+                    <SunMoon className="p-2" color="var(--color-900)" size={40} />
+                  )}
+                </Pressable>
+                <Pressable
+                  onPress={() => Linking.openURL(`mailto:${resume.email}`)}
+                  className="rounded-full"
+                  style={{ backgroundColor: 'var(--color-200)' }}>
+                  <Send className="p-2" size={40} color="var(--color-900)" />
+                </Pressable>
               </View>
-              <Text className="text-md text-wrap font-normal text-gray-900">
+              <Text className="text-md text-wrap font-normal" style={{ color: 'var(--color-900)' }}>
                 {resume.generalTitle}
               </Text>
             </View>
@@ -233,7 +280,14 @@ export default function Home() {
         <ScrollView
           className="px-5 pt-8"
           contentContainerStyle={{ paddingBottom: 48 }}
-          onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
+          onScroll={(e) => {
+            const percentage = e.nativeEvent.contentSize.height
+              ? e.nativeEvent.contentOffset.y /
+                (e.nativeEvent.contentSize.height - e.nativeEvent.layoutMeasurement.height)
+              : 0;
+
+            setScrollY(percentage);
+          }}
           horizontal={false}
           scrollEventThrottle={16}>
           {/* Header */}
@@ -248,29 +302,43 @@ export default function Home() {
           <View className="flex flex-col items-center justify-start gap-6 pt-10 sm:flex-row sm:pl-32">
             <View className="flex-1 flex-wrap items-start justify-start">
               <View className="mt-2 flex-row flex-wrap gap-x-3 gap-y-1">
-                <Pressable onPress={() => Linking.openURL(`mailto:${resume.email}`)}>
+                <Pressable
+                  onPress={() => Linking.openURL(`mailto:${resume.email}`)}
+                  className="flex-row items-center">
+                  <Send size={16} className="mr-1 text-blue-600" />
                   <Text className="text-base text-blue-600 underline">{resume.email}</Text>
                 </Pressable>
-                <Text className="text-base text-gray-400">•</Text>
-                <Pressable onPress={() => Linking.openURL(`tel:${resume.phone}`)}>
+                <Text className="text-base" style={{ color: 'var(--color-400)' }}>
+                  •
+                </Text>
+                <Pressable
+                  onPress={() => Linking.openURL(`tel:${resume.phone}`)}
+                  className="flex-row items-center">
+                  <Phone size={16} className="mr-1 text-blue-600" />
                   <Text className="text-base text-blue-600 underline">{resume.phone}</Text>
                 </Pressable>
-                <Text className="text-base text-gray-400">•</Text>
+                <Text className="text-base" style={{ color: 'var(--color-400)' }}>
+                  •
+                </Text>
                 <Pressable
                   onPress={() => Linking.openURL(resume.linkedin)}
                   className="flex-row items-center">
-                  <ExternalLink size={16} className="text-blue-600" />
+                  <ExternalLink size={16} className="mr-1 text-blue-600" />
                   <Text className="text-base text-blue-600 underline">LinkedIn</Text>
                 </Pressable>
-                <Text className="text-base text-gray-400">•</Text>
+                <Text className="text-base" style={{ color: 'var(--color-400)' }}>
+                  •
+                </Text>
                 <Pressable
                   onPress={() => Linking.openURL(resume.github)}
                   className="flex-row items-center">
-                  <ExternalLink size={16} className="text-blue-600" />
+                  <ExternalLink size={16} className="mr-1 text-blue-600" />
                   <Text className="text-base text-blue-600 underline">GitHub</Text>
                 </Pressable>
               </View>
-              <Text className="flex-wrap text-wrap text-base leading-6 text-gray-800">
+              <Text
+                className="flex-wrap text-wrap text-base leading-6"
+                style={{ color: 'var(--color-800)' }}>
                 {resume.summary}
               </Text>
             </View>
@@ -278,10 +346,16 @@ export default function Home() {
 
           {/* Skills */}
           <View className="mt-6">
-            <Text className="text-xl font-semibold tracking-tight text-gray-900">Core Skills</Text>
+            <Text
+              className="text-xl font-semibold tracking-tight"
+              style={{ color: 'var(--color-900)' }}>
+              Core Skills
+            </Text>
             <View className="mt-3">
               <View className="mt-1">
-                <Text className="text-sm font-semibold text-gray-900">Languages & Frameworks</Text>
+                <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
+                  Languages & Frameworks
+                </Text>
                 <View className="mt-2 flex-row flex-wrap">
                   {resume.skills.languages.map((s) => (
                     <Tag key={s} label={s} />
@@ -289,7 +363,9 @@ export default function Home() {
                 </View>
               </View>
               <View className="mt-3">
-                <Text className="text-sm font-semibold text-gray-900">Cloud & Infrastructure</Text>
+                <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
+                  Cloud & Infrastructure
+                </Text>
                 <View className="mt-2 flex-row flex-wrap">
                   {resume.skills.cloud.map((s) => (
                     <Tag key={s} label={s} />
@@ -297,7 +373,9 @@ export default function Home() {
                 </View>
               </View>
               <View className="mt-3">
-                <Text className="text-sm font-semibold text-gray-900">Strengths</Text>
+                <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
+                  Strengths
+                </Text>
                 <View className="mt-2 flex-row flex-wrap">
                   {resume.skills.strengths.map((s) => (
                     <Tag key={s} label={s} />
@@ -309,15 +387,15 @@ export default function Home() {
 
           {/* Experience */}
           <View className={`mt-6`}>
-            <Text className="text-xl font-semibold tracking-tight text-gray-900">
+            <Text
+              className="text-xl font-semibold tracking-tight"
+              style={{ color: 'var(--color-900)' }}>
               Professional Experience
             </Text>
             <ScrollView
               className="mt-3 flex flex-row gap-10 overflow-x-auto"
               contentContainerStyle={{ paddingBottom: 48, gap: 40 }}
-              onScroll={(e) => {
-                setScrollX(e.nativeEvent.contentOffset.x);
-              }}
+              onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
               horizontal={true}
               scrollEventThrottle={16}
               ref={experienceScrollRef}>
@@ -328,7 +406,11 @@ export default function Home() {
                   <Row
                     left={
                       <View>
-                        <Text className="text-base font-semibold text-gray-900">{role.title}</Text>
+                        <Text
+                          className="text-base font-semibold"
+                          style={{ color: 'var(--color-900)' }}>
+                          {role.title}
+                        </Text>
                         <Text className="text-base text-gray-700">{role.company}</Text>
                       </View>
                     }
@@ -346,13 +428,6 @@ export default function Home() {
                 </View>
               ))}
             </ScrollView>
-          </View>
-
-          {/* Footer note */}
-          <View className="mt-8 opacity-70">
-            <Link href="/details?name=Expo%20Rocks">
-              <Text className="mt-1 text-xs text-blue-600">View Details Screen</Text>
-            </Link>
           </View>
         </ScrollView>
       </SafeAreaView>

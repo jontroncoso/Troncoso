@@ -4,7 +4,19 @@ module.exports = {
 
   presets: [require('nativewind/preset')],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: 'var(--color-primary)',
+      },
+    },
   },
-  plugins: [],
+  plugins: [
+    // Set a default value on the `:root` element
+    ({ addBase }) =>
+      addBase({
+        ':root': {
+          '--color-primary': '#FFFF00',
+        },
+      }),
+  ],
 };
