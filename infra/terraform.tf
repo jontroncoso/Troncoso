@@ -15,10 +15,10 @@ locals {
 }
 
 
-variable "hosted_zone_id" {}
 variable "aws_region" { default = "us-east-1" }
-variable "s3_bucket" {}
 variable "domain" { default = "tronco.so" }
+variable "hosted_zone_id" {}
+variable "s3_bucket" {}
 
 # ACM cert for CloudFront (must be in us-east-1)
 resource "aws_acm_certificate" "cf_cert" {
