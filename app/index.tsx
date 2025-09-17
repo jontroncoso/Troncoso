@@ -15,22 +15,6 @@ import { useDarkMode, useScrollX, useScrollY } from '~/store/store';
 import { ExternalLink, Moon, Phone, Send, Sun, SunMoon } from 'lucide-react-native';
 import { resumeData, tagType, TagType } from '~/utils/resume';
 
-const Row: React.FC<{ left: React.ReactNode; right?: React.ReactNode }> = ({ left, right }) => (
-  <View className="flex-row items-start justify-between gap-3">
-    <View className="flex-1">{left}</View>
-    {right ? <View className="min-w-[96px] items-end">{right}</View> : null}
-  </View>
-);
-
-const Bullet: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <View className="mb-1.5 flex-row gap-2">
-    <Text className="text-base leading-6">•</Text>
-    <Text className="flex-1 text-base leading-6" style={{ color: 'var(--color-800)' }}>
-      {children}
-    </Text>
-  </View>
-);
-
 const Tag: React.FC<{ label: TagType }> = ({ label }) => {
   const typeMap = {
     language: ['var(--color-language)', 'var(--color-language-light)'],
@@ -41,12 +25,11 @@ const Tag: React.FC<{ label: TagType }> = ({ label }) => {
   };
   const type = tagType(label);
   if (!type) {
-    console.warn(`Tag "${label}" has no type`);
     return null;
   }
   return (
-    <View className="mb-2 mr-2 rounded-md px-2 py-1" style={{ backgroundColor: typeMap[type][1] }}>
-      <Text className="text-xs" style={{ color: typeMap[type][0] }}>
+    <View className="rounded-md px-1 py-0.5" style={{ backgroundColor: typeMap[type][1] }}>
+      <Text className="text-[10px]" style={{ color: typeMap[type][0] }}>
         {label}
       </Text>
     </View>
@@ -91,8 +74,13 @@ export default function Home() {
     }
     experienceBumpRef.current = setInterval(bounce, 6000);
     console.log(
-      `\n%cJon Troncoso 🚀`,
-      'color:#0dd8d8; background:#0b1021; font-size:1.5rem; padding:0.15rem 0.25rem; margin: 1rem auto; font-family: Rockwell; border: 2px solid #0dd8d8; border-radius: 4px;font-weight: bold; text-shadow: 1px 1px 1px #00af87bf;'
+      `\n%c🦖 ${resumeData.name} 🚀`,
+      'color:#fed7aa; background:#0b1021; font-size:1.5rem; padding:0.15rem 0.25rem; margin: 1rem auto; font-family: Rockwell; border: 2px solid #d97706; border-radius: 4px;font-weight: bold; text-shadow: 1px 1px 1px #00af87bf;'
+    );
+
+    console.log(
+      `\n%c📞 ${resumeData.phone} | ${resumeData.email} ✉️`,
+      'color:#93c5fd; background:#0b1021; font-size:1rem; padding:0.15rem 0.25rem; margin: 1rem auto; font-family: Helvetica; border: 2px solid #6366f1; border-radius: 4px;font-weight: bold; '
     );
   }, []);
 
@@ -263,7 +251,7 @@ export default function Home() {
                 <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
                   Languages
                 </Text>
-                <View className="mt-2 flex-row flex-wrap">
+                <View className="mt-2 flex flex-row flex-wrap gap-1">
                   {resumeData.skills.languages.map((s) => (
                     <Tag key={s} label={s} />
                   ))}
@@ -273,7 +261,7 @@ export default function Home() {
                 <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
                   Frameworks
                 </Text>
-                <View className="mt-2 flex-row flex-wrap">
+                <View className="mt-2 flex flex-row flex-wrap gap-1">
                   {resumeData.skills.frameworks.map((s) => (
                     <Tag key={s} label={s} />
                   ))}
@@ -283,7 +271,7 @@ export default function Home() {
                 <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
                   Cloud & Infrastructure
                 </Text>
-                <View className="mt-2 flex-row flex-wrap">
+                <View className="mt-2 flex flex-row flex-wrap gap-1">
                   {resumeData.skills.devops.map((s) => (
                     <Tag key={s} label={s} />
                   ))}
@@ -293,7 +281,7 @@ export default function Home() {
                 <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
                   Strengths
                 </Text>
-                <View className="mt-2 flex-row flex-wrap">
+                <View className="mt-2 flex flex-row flex-wrap gap-1">
                   {resumeData.skills.strengths.map((s) => (
                     <Tag key={s} label={s} />
                   ))}
@@ -320,8 +308,8 @@ export default function Home() {
                 <View
                   key={`${role.company}-${role.title}`}
                   className="mb-4 max-w-96 rounded-xl bg-zinc-500/20 p-6">
-                  <Row
-                    left={
+                  <View className="flex-row items-start justify-between gap-3">
+                    <View className="flex-1">
                       <View>
                         <Text
                           className="text-base font-semibold"
@@ -332,19 +320,25 @@ export default function Home() {
                           {role.company}
                         </Text>
                       </View>
-                    }
-                    right={
+                    </View>
+                    <View className="min-w-[96px] items-end">
                       <Text className="text-sm" style={{ color: 'var(--color-600)' }}>
                         {role.start} – {role.end}
                       </Text>
-                    }
-                  />
-                  <View className="mt-2">
+                    </View>
+                  </View>
+
+                  <View className="mt-2 flex-col gap-2">
                     {role.bullets.map((b, i) => (
-                      <Bullet key={i}>{b}</Bullet>
+                      <Text
+                        key={i}
+                        className={`flex-1 border-l border-red-${i + 1}00 pl-2 text-xs`}
+                        style={{ color: 'var(--color-800)' }}>
+                        {b}
+                      </Text>
                     ))}
                   </View>
-                  <View className="mt-3 flex-row flex-wrap">
+                  <View className="mt-2 flex flex-row flex-wrap gap-1">
                     {[...role.languages, ...role.frameworks, ...role.devops, ...role.strengths].map(
                       (s) => (
                         <Tag key={s} label={s} />
