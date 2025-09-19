@@ -22,8 +22,6 @@ const frameworks = [
   'Express',
   'Laravel',
   'NestJS',
-  'Next.js',
-  'Nuxt',
   'OpenAPI',
   'React Native',
   'React',
@@ -133,7 +131,7 @@ export const resumeData: ResumeType = {
   linkedin: 'https://www.linkedin.com/in/jonathan-troncoso-0b687360/',
   github: 'https://github.com/jontroncoso/Troncoso',
   summary:
-    'Senior Software Engineer & Technical Leader with 10+ years building and scaling fintech, SaaS, and consumer platforms. Expert in AWS, Kubernetes, microservices (gRPC/GraphQL/REST), and modern web/mobile. Blends hands-on delivery with team leadership to ship reliable, secure, and high-impact products.',
+    'Senior Software Engineer & Technical Leader with 15+ years building and scaling fintech, SaaS, and consumer platforms. Expert in AWS, Kubernetes, microservices (gRPC/GraphQL/REST), concise backend systems, and strong frontend expertise. Blends hands-on delivery with team leadership to ship reliable, secure, and high-impact products.',
   skills: { languages, devops, strengths, frameworks },
   experience: [
     {
@@ -181,8 +179,6 @@ export const resumeData: ResumeType = {
         'Symfony',
         'OpenAPI',
         'zod',
-        'Next.js',
-        'Nuxt',
       ],
       devops: [
         'AWS CDK',
