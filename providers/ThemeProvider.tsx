@@ -1,9 +1,8 @@
 // src/shared-components/providers/ThemeProviders.tsx
 import React, { createContext } from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import { themes } from '~/utils/color-theme';
 import { useDarkMode } from '~/store/store';
-import { vars } from 'nativewind';
 
 interface ThemeProviderProps {
   children: React.ReactNode;
