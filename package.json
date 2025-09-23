@@ -11,10 +11,11 @@
     "format": "eslint \"**/*.{js,jsx,ts,tsx}\" --fix && prettier \"**/*.{js,jsx,ts,tsx,json}\" --write",
     "web": "expo start --web",
     "deploy": "cd ./infra && terraform init && terraform validate && terraform apply -auto-approve",
-    "build:web": "expo export -p web"
+    "build:web": "expo export -p web && sed -i '' '$d' ./dist/index.html && cat ./assets/index.suffix.txt >> ./dist/index.html"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-navigation/native": "^7.0.3",
     "expo": "^54.0.4",
     "expo-constants": "~18.0.9",

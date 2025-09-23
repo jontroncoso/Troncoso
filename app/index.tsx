@@ -15,27 +15,6 @@ import { useDarkMode, useScrollX, useScrollY } from '~/store/store';
 import { ExternalLink, Moon, Phone, Send, Sun, SunMoon } from 'lucide-react-native';
 import { resumeData, tagType, TagType } from '~/utils/resume';
 
-const Tag: React.FC<{ label: TagType }> = ({ label }) => {
-  const typeMap = {
-    language: ['var(--color-language)', 'var(--color-language-light)'],
-    framework: ['var(--color-framework)', 'var(--color-framework-light)'],
-    devops: ['var(--color-devops)', 'var(--color-devops-light)'],
-    strength: ['var(--color-strength)', 'var(--color-strength-light)'],
-    false: ['var(--color-300)', 'var(--color-700)'],
-  };
-  const type = tagType(label);
-  if (!type) {
-    return null;
-  }
-  return (
-    <View className="rounded-md px-1 py-0.5" style={{ backgroundColor: typeMap[type][1] }}>
-      <Text className="text-[10px]" style={{ color: typeMap[type][0] }}>
-        {label}
-      </Text>
-    </View>
-  );
-};
-
 // ---------- Screen ----------
 export default function Home() {
   // Background Animation on page-scroll
@@ -51,6 +30,40 @@ export default function Home() {
   // Dark Mode
   const darkMode = useDarkMode((state) => state.darkMode);
   const toggleDarkMode = useDarkMode((state) => state.toggleDarkMode);
+
+  // Tag Selection
+  const [selectedTags, setSelectedTags] = React.useState<TagType[]>([]);
+  const Tag: React.FC<{ label: TagType }> = ({ label }) => {
+    const typeMap = {
+      language: ['var(--color-language)', 'var(--color-language-light)'],
+      framework: ['var(--color-framework)', 'var(--color-framework-light)'],
+      devops: ['var(--color-devops)', 'var(--color-devops-light)'],
+      strength: ['var(--color-strength)', 'var(--color-strength-light)'],
+      false: ['var(--color-300)', 'var(--color-700)'],
+    };
+    const type = tagType(label);
+
+    const active = selectedTags.includes(label);
+    if (!type) {
+      return null;
+    }
+    return (
+      <Pressable
+        className="rounded-md px-1 py-0.5"
+        style={{ backgroundColor: active ? typeMap[type][1] : 'var(--color-100)' }}
+        onPress={() => {
+          if (active) {
+            setSelectedTags(selectedTags.filter((tag) => tag !== label));
+          } else {
+            setSelectedTags([...selectedTags, label]);
+          }
+        }}>
+        <Text className="text-[10px]" style={{ color: typeMap[type][0] }}>
+          {label}
+        </Text>
+      </Pressable>
+    );
+  };
 
   // Bounce auto-scroll experience section
   const bounce = () => {
@@ -68,6 +81,7 @@ export default function Home() {
     }
   };
 
+  // Custom Console Log and start experience bounce
   React.useEffect(() => {
     if (experienceBumpRef.current) {
       clearInterval(experienceBumpRef.current);
@@ -245,6 +259,9 @@ export default function Home() {
               className="text-xl font-semibold tracking-tight"
               style={{ color: 'var(--color-900)' }}>
               Core Skills
+              <Text className="ml-2 text-xs" style={{ color: 'var(--color-800)' }}>
+                (click to filter experience)
+              </Text>
             </Text>
             <View className="mt-3">
               <View className="mt-1">
@@ -304,49 +321,64 @@ export default function Home() {
               horizontal={true}
               scrollEventThrottle={16}
               ref={experienceScrollRef}>
-              {resumeData.experience.map((role) => (
-                <View
-                  key={`${role.company}-${role.title}`}
-                  className="mb-4 max-w-96 rounded-xl bg-zinc-500/20 p-6">
-                  <View className="flex-row items-start justify-between gap-3">
-                    <View className="flex-1">
-                      <View>
-                        <Text
-                          className="text-base font-semibold"
-                          style={{ color: 'var(--color-900)' }}>
-                          {role.title}
-                        </Text>
-                        <Text className="text-base" style={{ color: 'var(--color-devops)' }}>
-                          {role.company}
+              {resumeData.experience
+                .filter((role) => {
+                  const roleTags = [
+                    ...role.languages,
+                    ...role.frameworks,
+                    ...role.devops,
+                    ...role.strengths,
+                  ];
+                  return (
+                    selectedTags.length === 0 || selectedTags.some((tag) => roleTags.includes(tag))
+                  );
+                })
+                .map((role) => (
+                  <View
+                    key={`${role.company}-${role.title}`}
+                    className="mb-4 max-w-96 rounded-xl bg-zinc-500/20 p-6">
+                    <View className="flex-row items-start justify-between gap-3">
+                      <View className="flex-1">
+                        <View>
+                          <Text
+                            className="text-base font-semibold"
+                            style={{ color: 'var(--color-900)' }}>
+                            {role.title}
+                          </Text>
+                          <Text className="text-base" style={{ color: 'var(--color-devops)' }}>
+                            {role.company}
+                          </Text>
+                        </View>
+                      </View>
+                      <View className="min-w-[96px] items-end">
+                        <Text className="text-sm" style={{ color: 'var(--color-600)' }}>
+                          {role.start} – {role.end}
                         </Text>
                       </View>
                     </View>
-                    <View className="min-w-[96px] items-end">
-                      <Text className="text-sm" style={{ color: 'var(--color-600)' }}>
-                        {role.start} – {role.end}
-                      </Text>
+
+                    <View className="mt-2 flex-col gap-2">
+                      {role.bullets.map((b, i) => (
+                        <Text
+                          key={i}
+                          className={`flex-1 border-l border-red-${i + 1}00 pl-2 text-xs`}
+                          style={{ color: 'var(--color-800)' }}>
+                          {b}
+                        </Text>
+                      ))}
+                    </View>
+                    <View className="mt-2 flex flex-row flex-wrap gap-1">
+                      {[
+                        ...role.languages,
+                        ...role.frameworks,
+                        ...role.devops,
+                        ...role.strengths,
+                      ].map((s) => (
+                        <Tag key={s} label={s} />
+                      ))}
                     </View>
                   </View>
-
-                  <View className="mt-2 flex-col gap-2">
-                    {role.bullets.map((b, i) => (
-                      <Text
-                        key={i}
-                        className={`flex-1 border-l border-red-${i + 1}00 pl-2 text-xs`}
-                        style={{ color: 'var(--color-800)' }}>
-                        {b}
-                      </Text>
-                    ))}
-                  </View>
-                  <View className="mt-2 flex flex-row flex-wrap gap-1">
-                    {[...role.languages, ...role.frameworks, ...role.devops, ...role.strengths].map(
-                      (s) => (
-                        <Tag key={s} label={s} />
-                      )
-                    )}
-                  </View>
-                </View>
-              ))}
+                ))}
             </ScrollView>
           </View>
         </ScrollView>

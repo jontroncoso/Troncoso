@@ -1,5 +1,7 @@
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface ScrollYState {
   scrollY: number;
@@ -63,7 +65,10 @@ export const useDarkMode = create<DarkModeState>()(
     },
     {
       name: 'darkmode-storage', // name of the item in the storage (must be unique)
-      storage: createJSONStorage(() => sessionStorage), // (optional) by default, 'localStorage' is used
+      storage:
+        Platform.OS === 'web'
+          ? createJSONStorage(() => sessionStorage)
+          : createJSONStorage(() => AsyncStorage),
     }
   )
 );
