@@ -1,6 +1,6 @@
 # What do we got here?
 
-Welcome! I'm Jonathan Troncoso and this is my resume. It was created in less than a week and can be deployed using terraform in less than a minute.
+Welcome! I'm [Jon Troncoso](https://jon.tronco.so) and this is my resume. It was created in less than a week and can be deployed using terraform in less than a minute.
 
 # Frontend
 

@@ -73,7 +73,7 @@ resource "aws_s3_bucket_policy" "public_policy" {
         Effect    = "Allow"
         Principal = "*"
         Action    = ["s3:GetObject"]
-        Resource  = "${aws_s3_bucket.react_apps.arn}/troncoso/*"
+        Resource  = "${aws_s3_bucket.react_apps.arn}/*"
       }
     ]
   })
@@ -175,3 +175,4 @@ resource "aws_route53_record" "www_alias" {
     evaluate_target_health = true
   }
 }
+
