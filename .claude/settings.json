@@ -1,0 +1,85 @@
+{
+  "permissions": {
+    "allow": ["Bash(say:*)"],
+    "deny": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": []
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "message=$(jq -r '(.tool_response?.newTodos?[]? | select(.status? == \"in_progress\") | .activeForm?) // \"\"'); [ -n \"$message\" ] && say --voice='Daniel (Enhanced)' \"$message\" || echo ''"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "message=$(jq -r '(.message?) // \"\"'); [ -n \"$message\" ] && say --voice='Daniel (Enhanced)' \"$message\" || echo ''"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "say --voice='Daniel (Enhanced)' 'All done!'"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": []
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "say --voice='Daniel (Enhanced)' 'Working...'"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "say --voice='Daniel (Enhanced)' 'Beginning Compact'"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "say --voice='Daniel (Enhanced)' \"Get to work you cheeky bastard!\""
+          }
+        ]
+      }
+    ]
+  }
+}
