@@ -13,6 +13,9 @@ import {
   Layers,
   Cloud,
   Users,
+  MapPin,
+  ChevronUp,
+  CircleCheck,
 } from 'lucide-react-native';
 import { useDarkMode } from '~/store/store';
 import { resumeData } from '~/utils/resume';
@@ -179,30 +182,38 @@ const SocialButton = ({
   <Pressable
     onPress={onPress}
     accessibilityLabel={label}
-    className="rounded-full p-3"
+    className="rounded-full p-3 transition-opacity hover:opacity-70"
     style={{ backgroundColor: 'var(--color-200)' }}>
     {icon}
   </Pressable>
 );
 
 // ---------- Main Screen ----------
-export default function NewResume() {
+export default function Home() {
   const darkMode = useDarkMode((state) => state.darkMode);
   const toggleDarkMode = useDarkMode((state) => state.toggleDarkMode);
+  const scrollRef = React.useRef<ScrollView>(null);
+  const [showBackToTop, setShowBackToTop] = React.useState(false);
+
+  const scrollToTop = () => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
 
   return (
     <SafeAreaProvider>
       <SafeAreaView className="flex-1" style={{ backgroundColor: 'var(--color-50)' }}>
         <ScrollView
+          ref={scrollRef}
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 48 }}
-          scrollEventThrottle={16}>
+          scrollEventThrottle={16}
+          onScroll={(e) => setShowBackToTop(e.nativeEvent.contentOffset.y > 400)}>
           {/* ========== HERO SECTION ========== */}
           <View className="relative px-6 pb-12 pt-6">
             {/* Dark Mode Toggle */}
             <Pressable
               onPress={toggleDarkMode}
-              className="absolute right-6 top-6 z-10 rounded-full p-2"
+              className="absolute right-6 top-6 z-10 rounded-full p-2 transition-opacity hover:opacity-70"
               style={{ backgroundColor: 'var(--color-200)' }}>
               {darkMode === 'light' && <Sun color="var(--color-900)" size={24} />}
               {darkMode === 'dark' && <Moon color="var(--color-900)" size={24} />}
@@ -240,14 +251,30 @@ export default function NewResume() {
                   style={{ color: 'var(--color-600)' }}>
                   Cloud Solutions Architect | Technical Leader
                 </Text>
+                <View className="mt-2 flex-row items-center justify-center gap-1 sm:justify-start">
+                  <MapPin color="var(--color-400)" size={14} />
+                  <Text className="text-sm" style={{ color: 'var(--color-400)' }}>
+                    Denver, CO
+                  </Text>
+                </View>
                 <Text
                   className="mt-4 max-w-xl text-center text-base leading-6 sm:text-left"
                   style={{ color: 'var(--color-700)' }}>
                   {resumeData.summary}
                 </Text>
 
+                {/* Open to Opportunities Badge */}
+                <View
+                  className="mt-4 flex-row items-center gap-2 self-center rounded-full px-4 py-2 sm:self-start"
+                  style={{ backgroundColor: 'var(--color-language-light)' }}>
+                  <CircleCheck color="var(--color-language)" size={16} />
+                  <Text className="text-sm font-medium" style={{ color: 'var(--color-language)' }}>
+                    Open to opportunities
+                  </Text>
+                </View>
+
                 {/* Contact Icons */}
-                <View className="mt-6 flex-row gap-3">
+                <View className="mt-4 flex-row gap-3">
                   <SocialButton
                     icon={<Mail color="var(--color-900)" size={20} />}
                     onPress={() => Linking.openURL(`mailto:${resumeData.email}`)}
@@ -279,6 +306,7 @@ export default function NewResume() {
               <MetricItem number="15+" label="Years Experience" />
               <MetricItem number="5" label="Years FinTech" />
               <MetricItem number="30%" label="AWS Cost Savings" />
+              <MetricItem number="50+" label="Microservices" />
             </View>
           </View>
 
@@ -361,7 +389,7 @@ export default function NewResume() {
               <View className="mt-8 flex-row gap-4">
                 <Link
                   href={`mailto:${resumeData.email}`}
-                  className="rounded-full px-8 py-4"
+                  className="rounded-full px-8 py-4 transition-opacity hover:opacity-80"
                   style={{ backgroundColor: 'var(--color-100)' }}>
                   <Text className="font-semibold" style={{ color: 'var(--color-900)' }}>
                     Get In Touch
@@ -369,7 +397,7 @@ export default function NewResume() {
                 </Link>
                 <Pressable
                   onPress={() => Linking.openURL(resumeData.github)}
-                  className="rounded-full border px-8 py-4"
+                  className="rounded-full border px-8 py-4 transition-opacity hover:opacity-70"
                   style={{ borderColor: 'var(--color-400)' }}>
                   <Text className="font-semibold" style={{ color: 'var(--color-50)' }}>
                     View GitHub
@@ -379,22 +407,41 @@ export default function NewResume() {
 
               {/* Social Links */}
               <View className="mt-10 flex-row gap-6">
-                <Link href={`mailto:${resumeData.email}`}>
+                <Link
+                  href={`mailto:${resumeData.email}`}
+                  className="transition-opacity hover:opacity-70">
                   <Mail color="var(--color-400)" size={24} />
                 </Link>
-                <Pressable onPress={() => Linking.openURL(resumeData.linkedin)}>
+                <Pressable
+                  onPress={() => Linking.openURL(resumeData.linkedin)}
+                  className="transition-opacity hover:opacity-70">
                   <Linkedin color="var(--color-400)" size={24} />
                 </Pressable>
-                <Pressable onPress={() => Linking.openURL(resumeData.github)}>
+                <Pressable
+                  onPress={() => Linking.openURL(resumeData.github)}
+                  className="transition-opacity hover:opacity-70">
                   <Github color="var(--color-400)" size={24} />
                 </Pressable>
-                <Pressable onPress={() => Linking.openURL(`tel:${resumeData.phone}`)}>
+                <Pressable
+                  onPress={() => Linking.openURL(`tel:${resumeData.phone}`)}
+                  className="transition-opacity hover:opacity-70">
                   <Phone color="var(--color-400)" size={24} />
                 </Pressable>
               </View>
             </View>
           </View>
         </ScrollView>
+
+        {/* Back to Top Button */}
+        {showBackToTop && (
+          <Pressable
+            onPress={scrollToTop}
+            className="absolute bottom-6 right-6 rounded-full p-3 shadow-lg transition-opacity hover:opacity-70"
+            style={{ backgroundColor: 'var(--color-900)' }}
+            accessibilityLabel="Back to top">
+            <ChevronUp color="var(--color-50)" size={24} />
+          </Pressable>
+        )}
       </SafeAreaView>
     </SafeAreaProvider>
   );
