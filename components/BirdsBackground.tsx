@@ -202,16 +202,16 @@ const birdFS = `
   uniform float invertColors;
 
   void main() {
-    float depth = 0.15;
+    float depth = 0.6;
     float alpha = ( 300. - z ) / 300.;
-    float gray = depth * alpha;
+    float gray = 0.1 + depth * alpha;
 
     // Invert for dark mode
     if ( invertColors > 0.5 ) {
       gray = 1.0 - gray;
     }
 
-    gl_FragColor = vec4( vec3( gray ), alpha * 1. );
+    gl_FragColor = vec4( vec3( gray ), alpha );
   }
 `;
 
@@ -450,7 +450,7 @@ export default function BirdsBackground({ darkMode }: BirdsBackgroundProps) {
         left: 0,
         width: '100%',
         height: '100%',
-        opacity: 0.15,
+        opacity: 0.65,
         pointerEvents: 'none',
         zIndex: 0,
       }}

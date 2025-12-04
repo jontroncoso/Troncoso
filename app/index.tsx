@@ -13,10 +13,12 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedScrollHandler,
   withTiming,
   Easing,
   interpolate,
   SharedValue,
+  runOnJS,
 } from 'react-native-reanimated';
 import {
   Mail,
@@ -44,33 +46,56 @@ import BirdsBackground from '~/components/BirdsBackground';
 const AnimatedSection = ({
   children,
   scrollY,
+  delay = 0,
 }: {
   children: React.ReactNode;
   scrollY: SharedValue<number>;
+  delay?: number;
 }) => {
   const { height: windowHeight } = useWindowDimensions();
-  const elementTop = useSharedValue(0);
+  const [layoutY, setLayoutY] = React.useState<number | null>(null);
   const hasAnimated = useSharedValue(false);
   const animationProgress = useSharedValue(0);
 
   const onLayout = (event: LayoutChangeEvent) => {
-    elementTop.value = event.nativeEvent.layout.y;
+    setLayoutY(event.nativeEvent.layout.y);
   };
 
+  // Check visibility and trigger animation
+  React.useEffect(() => {
+    if (layoutY === null) return;
+
+    const checkVisibility = () => {
+      const triggerPoint = layoutY - windowHeight + 150;
+      const isVisible = scrollY.value > triggerPoint || layoutY < windowHeight;
+
+      if (isVisible && !hasAnimated.value) {
+        hasAnimated.value = true;
+        setTimeout(() => {
+          animationProgress.value = withTiming(1, {
+            duration: 700,
+            easing: Easing.out(Easing.cubic),
+          });
+        }, delay);
+      }
+    };
+
+    // Check immediately on mount/layout
+    checkVisibility();
+
+    // Also check on scroll by subscribing to scrollY changes
+    const interval = setInterval(() => {
+      if (!hasAnimated.value) {
+        checkVisibility();
+      } else {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [layoutY, windowHeight, scrollY, hasAnimated, animationProgress, delay]);
+
   const animatedStyle = useAnimatedStyle(() => {
-    // Calculate if element is in viewport (with some buffer)
-    const triggerPoint = elementTop.value - windowHeight + 100;
-    const isVisible = scrollY.value > triggerPoint || elementTop.value < windowHeight;
-
-    // Start animation when element becomes visible
-    if (isVisible && !hasAnimated.value) {
-      hasAnimated.value = true;
-      animationProgress.value = withTiming(1, {
-        duration: 600,
-        easing: Easing.out(Easing.cubic),
-      });
-    }
-
     return {
       opacity: interpolate(animationProgress.value, [0, 1], [0, 1]),
       transform: [
@@ -79,7 +104,7 @@ const AnimatedSection = ({
         },
       ],
     };
-  }, [windowHeight]);
+  });
 
   return (
     <Animated.View onLayout={onLayout} style={animatedStyle}>
@@ -161,11 +186,7 @@ const ExperienceCard = ({
   experience: (typeof resumeData.experience)[0];
   isEven: boolean;
 }) => {
-  const allTags = [
-    ...experience.languages.slice(0, 2),
-    ...experience.frameworks.slice(0, 2),
-    ...experience.devops.slice(0, 3),
-  ];
+  const allTags = [...experience.languages, ...experience.frameworks, ...experience.devops];
 
   return (
     <View className={`relative mb-10 flex-row ${isEven ? 'lg:flex-row-reverse' : ''}`}>
@@ -208,7 +229,7 @@ const ExperienceCard = ({
 
           {/* Bullets */}
           <View className="mt-4 gap-2">
-            {experience.bullets.slice(0, 4).map((bullet, i) => (
+            {experience.bullets.map((bullet, i) => (
               <View key={i} className="flex-row">
                 <Text className="mr-2" style={{ color: 'var(--color-devops)' }}>
                   -
@@ -264,6 +285,17 @@ export default function Home() {
   const [showBackToTop, setShowBackToTop] = React.useState(false);
   const scrollY = useSharedValue(0);
 
+  const updateBackToTop = (visible: boolean) => {
+    setShowBackToTop(visible);
+  };
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+      runOnJS(updateBackToTop)(event.contentOffset.y > 400);
+    },
+  });
+
   const scrollToTop = () => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   };
@@ -276,12 +308,9 @@ export default function Home() {
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 48 }}
           scrollEventThrottle={16}
-          onScroll={(e) => {
-            scrollY.value = e.nativeEvent.contentOffset.y;
-            setShowBackToTop(e.nativeEvent.contentOffset.y > 400);
-          }}>
+          onScroll={scrollHandler}>
           {/* ========== HERO SECTION ========== */}
-          <AnimatedSection scrollY={scrollY}>
+          <AnimatedSection scrollY={scrollY} delay={0}>
             <View className="relative px-6 pb-12 pt-6">
               {/* Birds Background - Web Only */}
               {Platform.OS === 'web' && <BirdsBackground darkMode={finalDarkMode === 'dark'} />}
@@ -380,7 +409,7 @@ export default function Home() {
           </AnimatedSection>
 
           {/* ========== METRICS BAR ========== */}
-          <AnimatedSection scrollY={scrollY}>
+          <AnimatedSection scrollY={scrollY} delay={100}>
             <View className="px-6 py-8" style={{ backgroundColor: 'var(--color-900)' }}>
               <View className="flex-row flex-wrap justify-center gap-6 sm:gap-12">
                 <MetricItem number="15+" label="Years Experience" />
@@ -392,7 +421,7 @@ export default function Home() {
           </AnimatedSection>
 
           {/* ========== SKILLS SECTION ========== */}
-          <AnimatedSection scrollY={scrollY}>
+          <AnimatedSection scrollY={scrollY} delay={50}>
             <View className="px-6 py-12">
               <Text
                 className="mb-8 text-center text-2xl font-bold tracking-tight"
@@ -430,7 +459,7 @@ export default function Home() {
           </AnimatedSection>
 
           {/* ========== EXPERIENCE TIMELINE ========== */}
-          <AnimatedSection scrollY={scrollY}>
+          <AnimatedSection scrollY={scrollY} delay={50}>
             <View className="px-6 py-12">
               <Text
                 className="mb-10 text-center text-2xl font-bold tracking-tight"
@@ -459,7 +488,7 @@ export default function Home() {
           </AnimatedSection>
 
           {/* ========== FOOTER CTA ========== */}
-          <AnimatedSection scrollY={scrollY}>
+          <AnimatedSection scrollY={scrollY} delay={50}>
             <View className="px-6 py-16" style={{ backgroundColor: 'var(--color-900)' }}>
               <View className="mx-auto max-w-2xl items-center">
                 <Text
