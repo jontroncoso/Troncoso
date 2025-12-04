@@ -1,385 +1,398 @@
 import React from 'react';
-import {
-  ScrollView,
-  View,
-  Text,
-  Linking,
-  Pressable,
-  Image,
-  AnimatableNumericValue,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-} from 'react-native';
+import { ScrollView, View, Text, Pressable, Image, Linking } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { useDarkMode, useScrollX, useScrollY } from '~/store/store';
-import { ExternalLink, Moon, Phone, Send, Sun, SunMoon } from 'lucide-react-native';
-import { resumeData, tagType, TagType } from '~/utils/resume';
+import {
+  Mail,
+  Phone,
+  Linkedin,
+  Github,
+  Sun,
+  Moon,
+  SunMoon,
+  Code,
+  Layers,
+  Cloud,
+  Users,
+} from 'lucide-react-native';
+import { useDarkMode } from '~/store/store';
+import { resumeData } from '~/utils/resume';
+import { Link } from 'expo-router';
 
-// ---------- Screen ----------
-export default function Home() {
-  // Background Animation on page-scroll
-  const scrollY = useScrollY((state) => state.scrollY);
-  const setScrollY = useScrollY((state) => state.setScrollY);
+// ---------- Inline Components ----------
 
-  // Background Color Change on Experience Section scroll
-  const scrollX = useScrollX((state) => state.scrollX);
-  const setScrollX = useScrollX((state) => state.setScrollX);
-  const experienceScrollRef = React.useRef<ScrollView>(null);
-  const experienceBumpRef = React.useRef<NodeJS.Timeout | null>(null);
+const MetricItem = ({ number, label }: { number: string; label: string }) => (
+  <View className="items-center px-4 py-2">
+    <Text className="text-3xl font-bold" style={{ color: 'var(--color-50)' }}>
+      {number}
+    </Text>
+    <Text className="mt-1 text-sm" style={{ color: 'var(--color-400)' }}>
+      {label}
+    </Text>
+  </View>
+);
 
-  // Dark Mode
+const SkillTag = ({ label, type }: { label: string; type: string }) => {
+  const colorMap: Record<string, string> = {
+    language: 'var(--color-language)',
+    framework: 'var(--color-framework)',
+    devops: 'var(--color-devops)',
+    strength: 'var(--color-strength)',
+  };
+  const bgMap: Record<string, string> = {
+    language: 'var(--color-language-light)',
+    framework: 'var(--color-framework-light)',
+    devops: 'var(--color-devops-light)',
+    strength: 'var(--color-strength-light)',
+  };
+
+  return (
+    <View
+      className="rounded-full px-3 py-1"
+      style={{ backgroundColor: bgMap[type] || 'var(--color-100)' }}>
+      <Text className="text-xs font-medium" style={{ color: colorMap[type] || 'var(--color-600)' }}>
+        {label}
+      </Text>
+    </View>
+  );
+};
+
+const SkillCategory = ({
+  title,
+  icon,
+  skills,
+  type,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  skills: readonly string[];
+  type: string;
+}) => (
+  <View
+    className="w-full rounded-2xl p-5 sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)]"
+    style={{ backgroundColor: 'var(--color-100)' }}>
+    <View className="mb-4 flex-row items-center gap-3">
+      {icon}
+      <Text className="text-base font-semibold" style={{ color: 'var(--color-900)' }}>
+        {title}
+      </Text>
+    </View>
+    <View className="flex-row flex-wrap gap-2">
+      {skills.map((skill) => (
+        <SkillTag key={skill} label={skill} type={type} />
+      ))}
+    </View>
+  </View>
+);
+
+const ExperienceCard = ({
+  experience,
+  isEven,
+}: {
+  experience: (typeof resumeData.experience)[0];
+  isEven: boolean;
+}) => {
+  const allTags = [
+    ...experience.languages.slice(0, 2),
+    ...experience.frameworks.slice(0, 2),
+    ...experience.devops.slice(0, 3),
+  ];
+
+  return (
+    <View className={`relative mb-10 flex-row ${isEven ? 'lg:flex-row-reverse' : ''}`}>
+      {/* Timeline Dot */}
+      <View
+        className="absolute left-[7px] top-6 z-10 h-4 w-4 rounded-full border-4 lg:left-1/2 lg:-translate-x-1/2"
+        style={{
+          backgroundColor: 'var(--color-devops)',
+          borderColor: 'var(--color-50)',
+        }}
+      />
+
+      {/* Card */}
+      <View
+        className={`ml-10 flex-1 lg:ml-0 lg:w-[calc(50%-32px)] ${isEven ? 'lg:mr-auto lg:pr-10' : 'lg:ml-auto lg:pl-10'}`}>
+        <View
+          className="rounded-2xl border p-5"
+          style={{
+            backgroundColor: 'var(--color-50)',
+            borderColor: 'var(--color-200)',
+          }}>
+          {/* Header */}
+          <View className="flex-row items-start justify-between gap-3">
+            <View className="flex-1">
+              <Text className="text-lg font-bold" style={{ color: 'var(--color-900)' }}>
+                {experience.title}
+              </Text>
+              <Text className="text-base font-medium" style={{ color: 'var(--color-devops)' }}>
+                {experience.company}
+              </Text>
+            </View>
+            <View
+              className="rounded-full px-3 py-1"
+              style={{ backgroundColor: 'var(--color-100)' }}>
+              <Text className="text-xs" style={{ color: 'var(--color-600)' }}>
+                {experience.start} - {experience.end}
+              </Text>
+            </View>
+          </View>
+
+          {/* Bullets */}
+          <View className="mt-4 gap-2">
+            {experience.bullets.slice(0, 4).map((bullet, i) => (
+              <View key={i} className="flex-row">
+                <Text className="mr-2" style={{ color: 'var(--color-devops)' }}>
+                  -
+                </Text>
+                <Text className="flex-1 text-sm" style={{ color: 'var(--color-700)' }}>
+                  {bullet}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Tags */}
+          <View className="mt-4 flex-row flex-wrap gap-1">
+            {allTags.map((tag) => (
+              <Text
+                key={tag}
+                className="rounded px-2 py-0.5 text-[10px]"
+                style={{ backgroundColor: 'var(--color-100)', color: 'var(--color-500)' }}>
+                {tag}
+              </Text>
+            ))}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const SocialButton = ({
+  icon,
+  onPress,
+  label,
+}: {
+  icon: React.ReactNode;
+  onPress: () => void;
+  label: string;
+}) => (
+  <Pressable
+    onPress={onPress}
+    accessibilityLabel={label}
+    className="rounded-full p-3"
+    style={{ backgroundColor: 'var(--color-200)' }}>
+    {icon}
+  </Pressable>
+);
+
+// ---------- Main Screen ----------
+export default function NewResume() {
   const darkMode = useDarkMode((state) => state.darkMode);
   const toggleDarkMode = useDarkMode((state) => state.toggleDarkMode);
 
-  // Tag Selection
-  const [selectedTags, setSelectedTags] = React.useState<TagType[]>([]);
-  const Tag: React.FC<{ label: TagType }> = ({ label }) => {
-    const typeMap = {
-      language: ['var(--color-language)', 'var(--color-language-light)'],
-      framework: ['var(--color-framework)', 'var(--color-framework-light)'],
-      devops: ['var(--color-devops)', 'var(--color-devops-light)'],
-      strength: ['var(--color-strength)', 'var(--color-strength-light)'],
-      false: ['var(--color-300)', 'var(--color-700)'],
-    };
-    const type = tagType(label);
-
-    const active = selectedTags.includes(label);
-    if (!type) {
-      return null;
-    }
-    return (
-      <Pressable
-        className="rounded-md px-1 py-0.5"
-        style={{ backgroundColor: active ? typeMap[type][1] : 'var(--color-100)' }}
-        onPress={() => {
-          if (active) {
-            setSelectedTags(selectedTags.filter((tag) => tag !== label));
-          } else {
-            setSelectedTags([...selectedTags, label]);
-          }
-        }}>
-        <Text className="text-[10px]" style={{ color: typeMap[type][0] }}>
-          {label}
-        </Text>
-      </Pressable>
-    );
-  };
-
-  // Bounce auto-scroll experience section
-  const bounce = () => {
-    if (experienceScrollRef.current) {
-      experienceScrollRef.current.scrollTo({
-        x: 100,
-        animated: true,
-      });
-      setTimeout(() => {
-        experienceScrollRef.current?.scrollTo({
-          x: 0,
-          animated: true,
-        });
-      }, 150);
-    }
-  };
-
-  // Custom Console Log and start experience bounce
-  React.useEffect(() => {
-    if (experienceBumpRef.current) {
-      clearInterval(experienceBumpRef.current);
-    }
-    experienceBumpRef.current = setInterval(bounce, 6000);
-    console.log(
-      `\n%c🦖 ${resumeData.name} 🚀`,
-      'color:#fed7aa; background:#0b1021; font-size:1.5rem; padding:0.15rem 0.25rem; margin: 1rem auto; font-family: Rockwell; border: 2px solid #d97706; border-radius: 4px;font-weight: bold; text-shadow: 1px 1px 1px #00af87bf;'
-    );
-
-    console.log(
-      `\n%c📞 ${resumeData.phone} | ${resumeData.email} ✉️`,
-      'color:#93c5fd; background:#0b1021; font-size:1rem; padding:0.15rem 0.25rem; margin: 1rem auto; font-family: Helvetica; border: 2px solid #6366f1; border-radius: 4px;font-weight: bold; '
-    );
-  }, []);
-
-  const pageScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const percentage =
-      e.nativeEvent.contentOffset.y /
-      (e.nativeEvent.contentSize.height - e.nativeEvent.layoutMeasurement.height);
-
-    setScrollY(percentage);
-  };
-
-  const experienceScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (e.nativeEvent.contentOffset.x >= 250 && experienceBumpRef.current) {
-      clearTimeout(experienceBumpRef.current);
-      experienceBumpRef.current = null;
-    }
-    setScrollX(e.nativeEvent.contentOffset.x);
-  };
   return (
     <SafeAreaProvider>
       <SafeAreaView className="flex-1" style={{ backgroundColor: 'var(--color-50)' }}>
-        {/* Decorative Background */}
-        <View
-          className="text-bold fixed left-3/4 top-0 origin-left text-left opacity-10"
-          style={{
-            transform: [
-              { translateX: 0 },
-              { rotate: '90deg' },
-              { translateX: `-${80 * scrollY}%` as unknown as AnimatableNumericValue },
-            ],
-          }}>
-          <Text
-            style={{
-              fontSize: 300,
-              color: `rgb(${scrollX / 5}, ${scrollX / 10}, ${255 - scrollX})`,
-            }}>
-            TRONCOSO
-          </Text>
-        </View>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 48 }}
+          scrollEventThrottle={16}>
+          {/* ========== HERO SECTION ========== */}
+          <View className="relative px-6 pb-12 pt-6">
+            {/* Dark Mode Toggle */}
+            <Pressable
+              onPress={toggleDarkMode}
+              className="absolute right-6 top-6 z-10 rounded-full p-2"
+              style={{ backgroundColor: 'var(--color-200)' }}>
+              {darkMode === 'light' && <Sun color="var(--color-900)" size={24} />}
+              {darkMode === 'dark' && <Moon color="var(--color-900)" size={24} />}
+              {darkMode === false && <SunMoon color="var(--color-900)" size={24} />}
+            </Pressable>
 
-        {/* Fixed Header */}
-        <View className="fixed left-0 right-0 top-0 z-10 flex flex-col items-start justify-start bg-white/0 sm:flex-row">
-          <View
-            className="w-full flex-1 flex-row flex-wrap items-start p-3 backdrop-blur"
-            style={{ backgroundColor: 'var(--color-semitransparent)' }}>
-            <View
-              className="hidden aspect-square sm:block"
-              style={{ height: Math.max(60, 120 - scrollY * 150), marginBottom: '-100%' }}>
-              <Image
-                source={require('../assets/me.jpeg')}
-                className="rounded-full"
-                style={{ width: '100%', height: '100%' }}
-              />
-            </View>
-            <View className="flex-1 grow flex-col tracking-tight sm:pl-6">
-              <View className="flex flex-row items-center gap-2">
+            {/* Hero Content */}
+            <View className="flex-col items-center gap-6 pt-8 sm:flex-row sm:items-start sm:gap-10">
+              {/* Profile Photo */}
+              <View
+                className="h-40 w-40 overflow-hidden rounded-full border-4 sm:h-48 sm:w-48"
+                style={{ borderColor: 'var(--color-200)' }}>
+                <Image
+                  source={require('../assets/me.jpeg')}
+                  className="h-full w-full"
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode="cover"
+                />
+              </View>
+
+              {/* Text Content */}
+              <View className="flex-1 items-center sm:items-start">
                 <Text
-                  className="grow text-3xl font-extrabold"
+                  className="text-center text-4xl font-bold tracking-tight sm:text-left sm:text-5xl"
                   style={{ color: 'var(--color-900)' }}>
                   {resumeData.name}
                 </Text>
-                <Pressable
-                  onPress={toggleDarkMode}
-                  className="rounded-full"
-                  style={{ backgroundColor: 'var(--color-200)' }}>
-                  {darkMode === 'light' && (
-                    <Sun className="p-2" color="var(--color-900)" size={40} />
-                  )}
-                  {darkMode === 'dark' && (
-                    <Moon className="p-2" color="var(--color-900)" size={40} />
-                  )}
-                  {darkMode === false && (
-                    <SunMoon className="p-2" color="var(--color-900)" size={40} />
-                  )}
-                </Pressable>
-                <Pressable
-                  onPress={() => Linking.openURL(`mailto:${resumeData.email}`)}
-                  className="rounded-full"
-                  style={{ backgroundColor: 'var(--color-200)' }}>
-                  <Send className="p-2" size={40} color="var(--color-900)" />
-                </Pressable>
+                <Text
+                  className="mt-2 text-center text-xl font-semibold sm:text-left"
+                  style={{ color: 'var(--color-devops)' }}>
+                  Senior Software Engineer
+                </Text>
+                <Text
+                  className="mt-1 text-center text-base sm:text-left"
+                  style={{ color: 'var(--color-600)' }}>
+                  Cloud Solutions Architect | Technical Leader
+                </Text>
+                <Text
+                  className="mt-4 max-w-xl text-center text-base leading-6 sm:text-left"
+                  style={{ color: 'var(--color-700)' }}>
+                  {resumeData.summary}
+                </Text>
+
+                {/* Contact Icons */}
+                <View className="mt-6 flex-row gap-3">
+                  <SocialButton
+                    icon={<Mail color="var(--color-900)" size={20} />}
+                    onPress={() => Linking.openURL(`mailto:${resumeData.email}`)}
+                    label="Email"
+                  />
+                  <SocialButton
+                    icon={<Phone color="var(--color-900)" size={20} />}
+                    onPress={() => Linking.openURL(`tel:${resumeData.phone}`)}
+                    label="Phone"
+                  />
+                  <SocialButton
+                    icon={<Linkedin color="var(--color-900)" size={20} />}
+                    onPress={() => Linking.openURL(resumeData.linkedin)}
+                    label="LinkedIn"
+                  />
+                  <SocialButton
+                    icon={<Github color="var(--color-900)" size={20} />}
+                    onPress={() => Linking.openURL(resumeData.github)}
+                    label="GitHub"
+                  />
+                </View>
               </View>
-              <Text className="text-md text-wrap font-normal" style={{ color: 'var(--color-900)' }}>
-                {resumeData.generalTitle}
-              </Text>
             </View>
           </View>
-        </View>
 
-        {/* Main Content */}
-        <ScrollView
-          className="px-5 pt-8"
-          contentContainerStyle={{ paddingBottom: 48 }}
-          onScroll={pageScroll}
-          horizontal={false}
-          scrollEventThrottle={16}>
-          {/* Header */}
-          <View className="aspect-square w-full sm:hidden">
-            <Image
-              source={require('../assets/me.jpeg')}
-              className="rounded-full"
-              style={{ width: '100%', height: '100%' }}
-            />
+          {/* ========== METRICS BAR ========== */}
+          <View className="px-6 py-8" style={{ backgroundColor: 'var(--color-900)' }}>
+            <View className="flex-row flex-wrap justify-center gap-6 sm:gap-12">
+              <MetricItem number="15+" label="Years Experience" />
+              <MetricItem number="5" label="Years FinTech" />
+              <MetricItem number="30%" label="AWS Cost Savings" />
+            </View>
           </View>
 
-          <View className="flex flex-col items-center justify-start gap-6 pt-10 sm:flex-row sm:pl-32">
-            <View className="flex-1 flex-wrap items-start justify-start">
-              <View className="mt-2 flex-row flex-wrap gap-x-3 gap-y-1">
-                <Pressable
-                  onPress={() => Linking.openURL(`mailto:${resumeData.email}`)}
-                  className="flex-row items-center">
-                  <Send size={16} className="mr-1" color="var(--color-link)" />
-                  <Text className="text-base underline" style={{ color: 'var(--color-link)' }}>
-                    {resumeData.email}
+          {/* ========== SKILLS SECTION ========== */}
+          <View className="px-6 py-12">
+            <Text
+              className="mb-8 text-center text-2xl font-bold tracking-tight"
+              style={{ color: 'var(--color-900)' }}>
+              Technical Expertise
+            </Text>
+
+            <View className="flex-row flex-wrap justify-center gap-4">
+              <SkillCategory
+                title="Languages & Data"
+                icon={<Code color="var(--color-language)" size={20} />}
+                skills={resumeData.skills.languages}
+                type="language"
+              />
+              <SkillCategory
+                title="Frameworks"
+                icon={<Layers color="var(--color-framework)" size={20} />}
+                skills={resumeData.skills.frameworks}
+                type="framework"
+              />
+              <SkillCategory
+                title="Cloud & DevOps"
+                icon={<Cloud color="var(--color-devops)" size={20} />}
+                skills={resumeData.skills.devops}
+                type="devops"
+              />
+              <SkillCategory
+                title="Leadership"
+                icon={<Users color="var(--color-strength)" size={20} />}
+                skills={resumeData.skills.strengths}
+                type="strength"
+              />
+            </View>
+          </View>
+
+          {/* ========== EXPERIENCE TIMELINE ========== */}
+          <View className="px-6 py-12">
+            <Text
+              className="mb-10 text-center text-2xl font-bold tracking-tight"
+              style={{ color: 'var(--color-900)' }}>
+              Professional Journey
+            </Text>
+
+            {/* Timeline Container */}
+            <View className="relative mx-auto max-w-4xl">
+              {/* Vertical Line */}
+              <View
+                className="absolute bottom-0 left-[14px] top-0 w-0.5 lg:left-1/2 lg:-translate-x-1/2"
+                style={{ backgroundColor: 'var(--color-200)' }}
+              />
+
+              {/* Experience Cards */}
+              {resumeData.experience.map((exp, index) => (
+                <ExperienceCard
+                  key={`${exp.company}-${exp.title}`}
+                  experience={exp}
+                  isEven={index % 2 === 0}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* ========== FOOTER CTA ========== */}
+          <View className="px-6 py-16" style={{ backgroundColor: 'var(--color-900)' }}>
+            <View className="mx-auto max-w-2xl items-center">
+              <Text
+                className="text-center text-2xl font-bold sm:text-3xl"
+                style={{ color: 'var(--color-50)' }}>
+                Let&apos;s Build Something Great
+              </Text>
+              <Text className="mt-4 text-center text-base" style={{ color: 'var(--color-400)' }}>
+                15+ years of experience ready for your next challenge
+              </Text>
+
+              {/* CTA Buttons */}
+              <View className="mt-8 flex-row gap-4">
+                <Link
+                  href={`mailto:${resumeData.email}`}
+                  className="rounded-full px-8 py-4"
+                  style={{ backgroundColor: 'var(--color-100)' }}>
+                  <Text className="font-semibold" style={{ color: 'var(--color-900)' }}>
+                    Get In Touch
                   </Text>
-                </Pressable>
-                <Text className="text-base" style={{ color: 'var(--color-400)' }}>
-                  •
-                </Text>
-                <Pressable
-                  onPress={() => Linking.openURL(`tel:${resumeData.phone}`)}
-                  className="flex-row items-center">
-                  <Phone size={16} className="mr-1" color="var(--color-link)" />
-                  <Text className="text-base underline" style={{ color: 'var(--color-link)' }}>
-                    {resumeData.phone}
-                  </Text>
-                </Pressable>
-                <Text className="text-base" style={{ color: 'var(--color-400)' }}>
-                  •
-                </Text>
-                <Pressable
-                  onPress={() => Linking.openURL(resumeData.linkedin)}
-                  className="flex-row items-center">
-                  <ExternalLink size={16} className="mr-1" color="var(--color-link)" />
-                  <Text className="text-base underline" style={{ color: 'var(--color-link)' }}>
-                    LinkedIn
-                  </Text>
-                </Pressable>
-                <Text className="text-base" style={{ color: 'var(--color-400)' }}>
-                  •
-                </Text>
+                </Link>
                 <Pressable
                   onPress={() => Linking.openURL(resumeData.github)}
-                  className="flex-row items-center">
-                  <ExternalLink size={16} className="mr-1" color="var(--color-link)" />
-                  <Text className="text-base underline" style={{ color: 'var(--color-link)' }}>
-                    GitHub
+                  className="rounded-full border px-8 py-4"
+                  style={{ borderColor: 'var(--color-400)' }}>
+                  <Text className="font-semibold" style={{ color: 'var(--color-50)' }}>
+                    View GitHub
                   </Text>
                 </Pressable>
               </View>
-              <Text
-                className="flex-wrap text-wrap text-base leading-6"
-                style={{ color: 'var(--color-800)' }}>
-                {resumeData.summary}
-              </Text>
-            </View>
-          </View>
 
-          {/* Skills */}
-          <View className="mt-6">
-            <Text
-              className="text-xl font-semibold tracking-tight"
-              style={{ color: 'var(--color-900)' }}>
-              Core Skills
-              <Text className="ml-2 text-xs" style={{ color: 'var(--color-800)' }}>
-                (click to filter experience)
-              </Text>
-            </Text>
-            <View className="mt-3">
-              <View className="mt-1">
-                <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
-                  Languages
-                </Text>
-                <View className="mt-2 flex flex-row flex-wrap gap-1">
-                  {resumeData.skills.languages.map((s) => (
-                    <Tag key={s} label={s} />
-                  ))}
-                </View>
-              </View>
-              <View className="mt-1">
-                <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
-                  Frameworks
-                </Text>
-                <View className="mt-2 flex flex-row flex-wrap gap-1">
-                  {resumeData.skills.frameworks.map((s) => (
-                    <Tag key={s} label={s} />
-                  ))}
-                </View>
-              </View>
-              <View className="mt-3">
-                <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
-                  Cloud & Infrastructure
-                </Text>
-                <View className="mt-2 flex flex-row flex-wrap gap-1">
-                  {resumeData.skills.devops.map((s) => (
-                    <Tag key={s} label={s} />
-                  ))}
-                </View>
-              </View>
-              <View className="mt-3">
-                <Text className="text-sm font-semibold" style={{ color: 'var(--color-900)' }}>
-                  Strengths
-                </Text>
-                <View className="mt-2 flex flex-row flex-wrap gap-1">
-                  {resumeData.skills.strengths.map((s) => (
-                    <Tag key={s} label={s} />
-                  ))}
-                </View>
+              {/* Social Links */}
+              <View className="mt-10 flex-row gap-6">
+                <Link href={`mailto:${resumeData.email}`}>
+                  <Mail color="var(--color-400)" size={24} />
+                </Link>
+                <Pressable onPress={() => Linking.openURL(resumeData.linkedin)}>
+                  <Linkedin color="var(--color-400)" size={24} />
+                </Pressable>
+                <Pressable onPress={() => Linking.openURL(resumeData.github)}>
+                  <Github color="var(--color-400)" size={24} />
+                </Pressable>
+                <Pressable onPress={() => Linking.openURL(`tel:${resumeData.phone}`)}>
+                  <Phone color="var(--color-400)" size={24} />
+                </Pressable>
               </View>
             </View>
-          </View>
-
-          {/* Experience */}
-          <View className={`mt-6`}>
-            <Text
-              className="text-xl font-semibold tracking-tight"
-              style={{ color: 'var(--color-900)' }}>
-              Professional Experience
-            </Text>
-            <ScrollView
-              className="mt-3 flex flex-row gap-10 overflow-x-auto"
-              contentContainerStyle={{ paddingBottom: 48, gap: 40, alignItems: 'flex-start' }}
-              onScroll={experienceScroll}
-              horizontal={true}
-              scrollEventThrottle={16}
-              ref={experienceScrollRef}>
-              {resumeData.experience
-                .filter((role) => {
-                  const roleTags = [
-                    ...role.languages,
-                    ...role.frameworks,
-                    ...role.devops,
-                    ...role.strengths,
-                  ];
-                  return (
-                    selectedTags.length === 0 || selectedTags.some((tag) => roleTags.includes(tag))
-                  );
-                })
-                .map((role) => (
-                  <View
-                    key={`${role.company}-${role.title}`}
-                    className="mb-4 max-w-96 rounded-xl bg-zinc-500/20 p-6">
-                    <View className="flex-row items-start justify-between gap-3">
-                      <View className="flex-1">
-                        <View>
-                          <Text
-                            className="text-base font-semibold"
-                            style={{ color: 'var(--color-900)' }}>
-                            {role.title}
-                          </Text>
-                          <Text className="text-base" style={{ color: 'var(--color-devops)' }}>
-                            {role.company}
-                          </Text>
-                        </View>
-                      </View>
-                      <View className="min-w-[96px] items-end">
-                        <Text className="text-sm" style={{ color: 'var(--color-600)' }}>
-                          {role.start} – {role.end}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View className="mt-2 flex-col gap-2">
-                      {role.bullets.map((b, i) => (
-                        <Text
-                          key={i}
-                          className={`flex-1 border-l border-red-${i + 1}00 pl-2 text-xs`}
-                          style={{ color: 'var(--color-800)' }}>
-                          {b}
-                        </Text>
-                      ))}
-                    </View>
-                    <View className="mt-2 flex flex-row flex-wrap gap-1">
-                      {[
-                        ...role.languages,
-                        ...role.frameworks,
-                        ...role.devops,
-                        ...role.strengths,
-                      ].map((s) => (
-                        <Tag key={s} label={s} />
-                      ))}
-                    </View>
-                  </View>
-                ))}
-            </ScrollView>
           </View>
         </ScrollView>
       </SafeAreaView>
