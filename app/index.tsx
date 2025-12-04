@@ -1,6 +1,23 @@
 import React from 'react';
-import { ScrollView, View, Text, Pressable, Image, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  Image,
+  Linking,
+  useWindowDimensions,
+  LayoutChangeEvent,
+  Platform,
+} from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  interpolate,
+  SharedValue,
+} from 'react-native-reanimated';
 import {
   Mail,
   Phone,
@@ -20,6 +37,56 @@ import {
 import { useDarkMode } from '~/store/store';
 import { resumeData } from '~/utils/resume';
 import { Link } from 'expo-router';
+import BirdsBackground from '~/components/BirdsBackground';
+
+// ---------- Animated Section Component ----------
+
+const AnimatedSection = ({
+  children,
+  scrollY,
+}: {
+  children: React.ReactNode;
+  scrollY: SharedValue<number>;
+}) => {
+  const { height: windowHeight } = useWindowDimensions();
+  const elementTop = useSharedValue(0);
+  const hasAnimated = useSharedValue(false);
+  const animationProgress = useSharedValue(0);
+
+  const onLayout = (event: LayoutChangeEvent) => {
+    elementTop.value = event.nativeEvent.layout.y;
+  };
+
+  const animatedStyle = useAnimatedStyle(() => {
+    // Calculate if element is in viewport (with some buffer)
+    const triggerPoint = elementTop.value - windowHeight + 100;
+    const isVisible = scrollY.value > triggerPoint || elementTop.value < windowHeight;
+
+    // Start animation when element becomes visible
+    if (isVisible && !hasAnimated.value) {
+      hasAnimated.value = true;
+      animationProgress.value = withTiming(1, {
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+      });
+    }
+
+    return {
+      opacity: interpolate(animationProgress.value, [0, 1], [0, 1]),
+      transform: [
+        {
+          translateY: interpolate(animationProgress.value, [0, 1], [30, 0]),
+        },
+      ],
+    };
+  }, [windowHeight]);
+
+  return (
+    <Animated.View onLayout={onLayout} style={animatedStyle}>
+      {children}
+    </Animated.View>
+  );
+};
 
 // ---------- Inline Components ----------
 
@@ -191,9 +258,11 @@ const SocialButton = ({
 // ---------- Main Screen ----------
 export default function Home() {
   const darkMode = useDarkMode((state) => state.darkMode);
+  const finalDarkMode = useDarkMode((state) => state.finalDarkMode);
   const toggleDarkMode = useDarkMode((state) => state.toggleDarkMode);
-  const scrollRef = React.useRef<ScrollView>(null);
+  const scrollRef = React.useRef<Animated.ScrollView>(null);
   const [showBackToTop, setShowBackToTop] = React.useState(false);
+  const scrollY = useSharedValue(0);
 
   const scrollToTop = () => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
@@ -202,235 +271,253 @@ export default function Home() {
   return (
     <SafeAreaProvider>
       <SafeAreaView className="flex-1" style={{ backgroundColor: 'var(--color-50)' }}>
-        <ScrollView
+        <Animated.ScrollView
           ref={scrollRef}
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 48 }}
           scrollEventThrottle={16}
-          onScroll={(e) => setShowBackToTop(e.nativeEvent.contentOffset.y > 400)}>
+          onScroll={(e) => {
+            scrollY.value = e.nativeEvent.contentOffset.y;
+            setShowBackToTop(e.nativeEvent.contentOffset.y > 400);
+          }}>
           {/* ========== HERO SECTION ========== */}
-          <View className="relative px-6 pb-12 pt-6">
-            {/* Dark Mode Toggle */}
-            <Pressable
-              onPress={toggleDarkMode}
-              className="absolute right-6 top-6 z-10 rounded-full p-2 transition-opacity hover:opacity-70"
-              style={{ backgroundColor: 'var(--color-200)' }}>
-              {darkMode === 'light' && <Sun color="var(--color-900)" size={24} />}
-              {darkMode === 'dark' && <Moon color="var(--color-900)" size={24} />}
-              {darkMode === false && <SunMoon color="var(--color-900)" size={24} />}
-            </Pressable>
+          <AnimatedSection scrollY={scrollY}>
+            <View className="relative px-6 pb-12 pt-6">
+              {/* Birds Background - Web Only */}
+              {Platform.OS === 'web' && <BirdsBackground darkMode={finalDarkMode === 'dark'} />}
 
-            {/* Hero Content */}
-            <View className="flex-col items-center gap-6 pt-8 sm:flex-row sm:items-start sm:gap-10">
-              {/* Profile Photo */}
-              <View
-                className="h-40 w-40 overflow-hidden rounded-full border-4 sm:h-48 sm:w-48"
-                style={{ borderColor: 'var(--color-200)' }}>
-                <Image
-                  source={require('../assets/me.jpeg')}
-                  className="h-full w-full"
-                  style={{ width: '100%', height: '100%' }}
-                  resizeMode="cover"
-                />
-              </View>
+              {/* Dark Mode Toggle */}
+              <Pressable
+                onPress={toggleDarkMode}
+                className="absolute right-6 top-6 z-10 rounded-full p-2 transition-opacity hover:opacity-70"
+                style={{ backgroundColor: 'var(--color-200)' }}>
+                {darkMode === 'light' && <Sun color="var(--color-900)" size={24} />}
+                {darkMode === 'dark' && <Moon color="var(--color-900)" size={24} />}
+                {darkMode === false && <SunMoon color="var(--color-900)" size={24} />}
+              </Pressable>
 
-              {/* Text Content */}
-              <View className="flex-1 items-center sm:items-start">
-                <Text
-                  className="text-center text-4xl font-bold tracking-tight sm:text-left sm:text-5xl"
-                  style={{ color: 'var(--color-900)' }}>
-                  {resumeData.name}
-                </Text>
-                <Text
-                  className="mt-2 text-center text-xl font-semibold sm:text-left"
-                  style={{ color: 'var(--color-devops)' }}>
-                  Senior Software Engineer
-                </Text>
-                <Text
-                  className="mt-1 text-center text-base sm:text-left"
-                  style={{ color: 'var(--color-600)' }}>
-                  Cloud Solutions Architect | Technical Leader
-                </Text>
-                <View className="mt-2 flex-row items-center justify-center gap-1 sm:justify-start">
-                  <MapPin color="var(--color-400)" size={14} />
-                  <Text className="text-sm" style={{ color: 'var(--color-400)' }}>
-                    Denver, CO
-                  </Text>
-                </View>
-                <Text
-                  className="mt-4 max-w-xl text-center text-base leading-6 sm:text-left"
-                  style={{ color: 'var(--color-700)' }}>
-                  {resumeData.summary}
-                </Text>
-
-                {/* Open to Opportunities Badge */}
+              {/* Hero Content */}
+              <View className="flex-col items-center gap-6 pt-8 sm:flex-row sm:items-start sm:gap-10">
+                {/* Profile Photo */}
                 <View
-                  className="mt-4 flex-row items-center gap-2 self-center rounded-full px-4 py-2 sm:self-start"
-                  style={{ backgroundColor: 'var(--color-language-light)' }}>
-                  <CircleCheck color="var(--color-language)" size={16} />
-                  <Text className="text-sm font-medium" style={{ color: 'var(--color-language)' }}>
-                    Open to opportunities
-                  </Text>
+                  className="h-40 w-40 overflow-hidden rounded-full border-4 sm:h-48 sm:w-48"
+                  style={{ borderColor: 'var(--color-200)' }}>
+                  <Image
+                    source={require('../assets/me.jpeg')}
+                    className="h-full w-full"
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="cover"
+                  />
                 </View>
 
-                {/* Contact Icons */}
-                <View className="mt-4 flex-row gap-3">
-                  <SocialButton
-                    icon={<Mail color="var(--color-900)" size={20} />}
-                    onPress={() => Linking.openURL(`mailto:${resumeData.email}`)}
-                    label="Email"
-                  />
-                  <SocialButton
-                    icon={<Phone color="var(--color-900)" size={20} />}
-                    onPress={() => Linking.openURL(`tel:${resumeData.phone}`)}
-                    label="Phone"
-                  />
-                  <SocialButton
-                    icon={<Linkedin color="var(--color-900)" size={20} />}
-                    onPress={() => Linking.openURL(resumeData.linkedin)}
-                    label="LinkedIn"
-                  />
-                  <SocialButton
-                    icon={<Github color="var(--color-900)" size={20} />}
-                    onPress={() => Linking.openURL(resumeData.github)}
-                    label="GitHub"
-                  />
+                {/* Text Content */}
+                <View className="flex-1 items-center sm:items-start">
+                  <Text
+                    className="text-center text-4xl font-bold tracking-tight sm:text-left sm:text-5xl"
+                    style={{ color: 'var(--color-900)' }}>
+                    {resumeData.name}
+                  </Text>
+                  <Text
+                    className="mt-2 text-center text-xl font-semibold sm:text-left"
+                    style={{ color: 'var(--color-devops)' }}>
+                    Senior Software Engineer
+                  </Text>
+                  <Text
+                    className="mt-1 text-center text-base sm:text-left"
+                    style={{ color: 'var(--color-600)' }}>
+                    Cloud Solutions Architect | Technical Leader
+                  </Text>
+                  <View className="mt-2 flex-row items-center justify-center gap-1 sm:justify-start">
+                    <MapPin color="var(--color-400)" size={14} />
+                    <Text className="text-sm" style={{ color: 'var(--color-400)' }}>
+                      Denver, CO
+                    </Text>
+                  </View>
+                  <Text
+                    className="mt-4 max-w-xl text-center text-base leading-6 sm:text-left"
+                    style={{ color: 'var(--color-700)' }}>
+                    {resumeData.summary}
+                  </Text>
+
+                  {/* Open to Opportunities Badge */}
+                  <View
+                    className="mt-4 flex-row items-center gap-2 self-center rounded-full px-4 py-2 sm:self-start"
+                    style={{ backgroundColor: 'var(--color-language-light)' }}>
+                    <CircleCheck color="var(--color-language)" size={16} />
+                    <Text
+                      className="text-sm font-medium"
+                      style={{ color: 'var(--color-language)' }}>
+                      Open to opportunities
+                    </Text>
+                  </View>
+
+                  {/* Contact Icons */}
+                  <View className="mt-4 flex-row gap-3">
+                    <SocialButton
+                      icon={<Mail color="var(--color-900)" size={20} />}
+                      onPress={() => Linking.openURL(`mailto:${resumeData.email}`)}
+                      label="Email"
+                    />
+                    <SocialButton
+                      icon={<Phone color="var(--color-900)" size={20} />}
+                      onPress={() => Linking.openURL(`tel:${resumeData.phone}`)}
+                      label="Phone"
+                    />
+                    <SocialButton
+                      icon={<Linkedin color="var(--color-900)" size={20} />}
+                      onPress={() => Linking.openURL(resumeData.linkedin)}
+                      label="LinkedIn"
+                    />
+                    <SocialButton
+                      icon={<Github color="var(--color-900)" size={20} />}
+                      onPress={() => Linking.openURL(resumeData.github)}
+                      label="GitHub"
+                    />
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
+          </AnimatedSection>
 
           {/* ========== METRICS BAR ========== */}
-          <View className="px-6 py-8" style={{ backgroundColor: 'var(--color-900)' }}>
-            <View className="flex-row flex-wrap justify-center gap-6 sm:gap-12">
-              <MetricItem number="15+" label="Years Experience" />
-              <MetricItem number="5" label="Years FinTech" />
-              <MetricItem number="30%" label="AWS Cost Savings" />
-              <MetricItem number="50+" label="Microservices" />
+          <AnimatedSection scrollY={scrollY}>
+            <View className="px-6 py-8" style={{ backgroundColor: 'var(--color-900)' }}>
+              <View className="flex-row flex-wrap justify-center gap-6 sm:gap-12">
+                <MetricItem number="15+" label="Years Experience" />
+                <MetricItem number="5" label="Years FinTech" />
+                <MetricItem number="30%" label="AWS Cost Savings" />
+                <MetricItem number="50+" label="Microservices" />
+              </View>
             </View>
-          </View>
+          </AnimatedSection>
 
           {/* ========== SKILLS SECTION ========== */}
-          <View className="px-6 py-12">
-            <Text
-              className="mb-8 text-center text-2xl font-bold tracking-tight"
-              style={{ color: 'var(--color-900)' }}>
-              Technical Expertise
-            </Text>
+          <AnimatedSection scrollY={scrollY}>
+            <View className="px-6 py-12">
+              <Text
+                className="mb-8 text-center text-2xl font-bold tracking-tight"
+                style={{ color: 'var(--color-900)' }}>
+                Technical Expertise
+              </Text>
 
-            <View className="flex-row flex-wrap justify-center gap-4">
-              <SkillCategory
-                title="Languages & Data"
-                icon={<Code color="var(--color-language)" size={20} />}
-                skills={resumeData.skills.languages}
-                type="language"
-              />
-              <SkillCategory
-                title="Frameworks"
-                icon={<Layers color="var(--color-framework)" size={20} />}
-                skills={resumeData.skills.frameworks}
-                type="framework"
-              />
-              <SkillCategory
-                title="Cloud & DevOps"
-                icon={<Cloud color="var(--color-devops)" size={20} />}
-                skills={resumeData.skills.devops}
-                type="devops"
-              />
-              <SkillCategory
-                title="Leadership"
-                icon={<Users color="var(--color-strength)" size={20} />}
-                skills={resumeData.skills.strengths}
-                type="strength"
-              />
+              <View className="flex-row flex-wrap justify-center gap-4">
+                <SkillCategory
+                  title="Languages & Data"
+                  icon={<Code color="var(--color-language)" size={20} />}
+                  skills={resumeData.skills.languages}
+                  type="language"
+                />
+                <SkillCategory
+                  title="Frameworks"
+                  icon={<Layers color="var(--color-framework)" size={20} />}
+                  skills={resumeData.skills.frameworks}
+                  type="framework"
+                />
+                <SkillCategory
+                  title="Cloud & DevOps"
+                  icon={<Cloud color="var(--color-devops)" size={20} />}
+                  skills={resumeData.skills.devops}
+                  type="devops"
+                />
+                <SkillCategory
+                  title="Leadership"
+                  icon={<Users color="var(--color-strength)" size={20} />}
+                  skills={resumeData.skills.strengths}
+                  type="strength"
+                />
+              </View>
             </View>
-          </View>
+          </AnimatedSection>
 
           {/* ========== EXPERIENCE TIMELINE ========== */}
-          <View className="px-6 py-12">
-            <Text
-              className="mb-10 text-center text-2xl font-bold tracking-tight"
-              style={{ color: 'var(--color-900)' }}>
-              Professional Journey
-            </Text>
+          <AnimatedSection scrollY={scrollY}>
+            <View className="px-6 py-12">
+              <Text
+                className="mb-10 text-center text-2xl font-bold tracking-tight"
+                style={{ color: 'var(--color-900)' }}>
+                Professional Journey
+              </Text>
 
-            {/* Timeline Container */}
-            <View className="relative mx-auto max-w-4xl">
-              {/* Vertical Line */}
-              <View
-                className="absolute bottom-0 left-[14px] top-0 w-0.5 lg:left-1/2 lg:-translate-x-1/2"
-                style={{ backgroundColor: 'var(--color-200)' }}
-              />
-
-              {/* Experience Cards */}
-              {resumeData.experience.map((exp, index) => (
-                <ExperienceCard
-                  key={`${exp.company}-${exp.title}`}
-                  experience={exp}
-                  isEven={index % 2 === 0}
+              {/* Timeline Container */}
+              <View className="relative mx-auto max-w-4xl">
+                {/* Vertical Line */}
+                <View
+                  className="absolute bottom-0 left-[14px] top-0 w-0.5 lg:left-1/2 lg:-translate-x-1/2"
+                  style={{ backgroundColor: 'var(--color-200)' }}
                 />
-              ))}
+
+                {/* Experience Cards */}
+                {resumeData.experience.map((exp, index) => (
+                  <ExperienceCard
+                    key={`${exp.company}-${exp.title}`}
+                    experience={exp}
+                    isEven={index % 2 === 0}
+                  />
+                ))}
+              </View>
             </View>
-          </View>
+          </AnimatedSection>
 
           {/* ========== FOOTER CTA ========== */}
-          <View className="px-6 py-16" style={{ backgroundColor: 'var(--color-900)' }}>
-            <View className="mx-auto max-w-2xl items-center">
-              <Text
-                className="text-center text-2xl font-bold sm:text-3xl"
-                style={{ color: 'var(--color-50)' }}>
-                Let&apos;s Build Something Great
-              </Text>
-              <Text className="mt-4 text-center text-base" style={{ color: 'var(--color-400)' }}>
-                15+ years of experience ready for your next challenge
-              </Text>
+          <AnimatedSection scrollY={scrollY}>
+            <View className="px-6 py-16" style={{ backgroundColor: 'var(--color-900)' }}>
+              <View className="mx-auto max-w-2xl items-center">
+                <Text
+                  className="text-center text-2xl font-bold sm:text-3xl"
+                  style={{ color: 'var(--color-50)' }}>
+                  Let&apos;s Build Something Great
+                </Text>
+                <Text className="mt-4 text-center text-base" style={{ color: 'var(--color-400)' }}>
+                  15+ years of experience ready for your next challenge
+                </Text>
 
-              {/* CTA Buttons */}
-              <View className="mt-8 flex-row gap-4">
-                <Link
-                  href={`mailto:${resumeData.email}`}
-                  className="rounded-full px-8 py-4 transition-opacity hover:opacity-80"
-                  style={{ backgroundColor: 'var(--color-100)' }}>
-                  <Text className="font-semibold" style={{ color: 'var(--color-900)' }}>
-                    Get In Touch
-                  </Text>
-                </Link>
-                <Pressable
-                  onPress={() => Linking.openURL(resumeData.github)}
-                  className="rounded-full border px-8 py-4 transition-opacity hover:opacity-70"
-                  style={{ borderColor: 'var(--color-400)' }}>
-                  <Text className="font-semibold" style={{ color: 'var(--color-50)' }}>
-                    View GitHub
-                  </Text>
-                </Pressable>
-              </View>
+                {/* CTA Buttons */}
+                <View className="mt-8 flex-row gap-4">
+                  <Link
+                    href={`mailto:${resumeData.email}`}
+                    className="rounded-full px-8 py-4 transition-opacity hover:opacity-80"
+                    style={{ backgroundColor: 'var(--color-100)' }}>
+                    <Text className="font-semibold" style={{ color: 'var(--color-900)' }}>
+                      Get In Touch
+                    </Text>
+                  </Link>
+                  <Pressable
+                    onPress={() => Linking.openURL(resumeData.github)}
+                    className="rounded-full border px-8 py-4 transition-opacity hover:opacity-70"
+                    style={{ borderColor: 'var(--color-400)' }}>
+                    <Text className="font-semibold" style={{ color: 'var(--color-50)' }}>
+                      View GitHub
+                    </Text>
+                  </Pressable>
+                </View>
 
-              {/* Social Links */}
-              <View className="mt-10 flex-row gap-6">
-                <Link
-                  href={`mailto:${resumeData.email}`}
-                  className="transition-opacity hover:opacity-70">
-                  <Mail color="var(--color-400)" size={24} />
-                </Link>
-                <Pressable
-                  onPress={() => Linking.openURL(resumeData.linkedin)}
-                  className="transition-opacity hover:opacity-70">
-                  <Linkedin color="var(--color-400)" size={24} />
-                </Pressable>
-                <Pressable
-                  onPress={() => Linking.openURL(resumeData.github)}
-                  className="transition-opacity hover:opacity-70">
-                  <Github color="var(--color-400)" size={24} />
-                </Pressable>
-                <Pressable
-                  onPress={() => Linking.openURL(`tel:${resumeData.phone}`)}
-                  className="transition-opacity hover:opacity-70">
-                  <Phone color="var(--color-400)" size={24} />
-                </Pressable>
+                {/* Social Links */}
+                <View className="mt-10 flex-row gap-6">
+                  <Link
+                    href={`mailto:${resumeData.email}`}
+                    className="transition-opacity hover:opacity-70">
+                    <Mail color="var(--color-400)" size={24} />
+                  </Link>
+                  <Pressable
+                    onPress={() => Linking.openURL(resumeData.linkedin)}
+                    className="transition-opacity hover:opacity-70">
+                    <Linkedin color="var(--color-400)" size={24} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => Linking.openURL(resumeData.github)}
+                    className="transition-opacity hover:opacity-70">
+                    <Github color="var(--color-400)" size={24} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => Linking.openURL(`tel:${resumeData.phone}`)}
+                    className="transition-opacity hover:opacity-70">
+                    <Phone color="var(--color-400)" size={24} />
+                  </Pressable>
+                </View>
               </View>
             </View>
-          </View>
-        </ScrollView>
+          </AnimatedSection>
+        </Animated.ScrollView>
 
         {/* Back to Top Button */}
         {showBackToTop && (
