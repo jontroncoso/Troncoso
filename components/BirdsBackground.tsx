@@ -211,7 +211,7 @@ const birdFS = `
       gray = 1.0 - gray;
     }
 
-    gl_FragColor = vec4( vec3( gray ), alpha * 0.6 );
+    gl_FragColor = vec4( vec3( gray ), alpha * 1. );
   }
 `;
 
@@ -390,7 +390,7 @@ export default function BirdsBackground({ darkMode }: BirdsBackgroundProps) {
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    container.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointermove', onPointerMove);
     window.addEventListener('resize', onWindowResize);
 
     // Animation
@@ -430,7 +430,7 @@ export default function BirdsBackground({ darkMode }: BirdsBackgroundProps) {
     // Cleanup
     return () => {
       cancelAnimationFrame(animationRef.current);
-      container.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('resize', onWindowResize);
       renderer.dispose();
       geometry.dispose();
